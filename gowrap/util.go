@@ -61,6 +61,12 @@ func CamelCase(s string) string {
 			t = append(t, s[i])
 		}
 	}
+
+	// BUG? If type ends with _String, the Go generator adds an "_" at end
+	if strings.HasSuffix(string(t), "String") {
+		t = append(t, byte('_'))
+	}
+
 	return string(t)
 }
 

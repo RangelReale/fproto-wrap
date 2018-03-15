@@ -25,7 +25,7 @@ func (t *TypeConverter_Default) TypeName(g *GeneratorFile, tntype TypeConverterT
 			ret += "*"
 		}
 	case TNT_FIELD_DEFINITION:
-		if g.G().Syntax() == GeneratorSyntax_Proto2 || t.tp.IsPointer() {
+		if (g.G().Syntax() == GeneratorSyntax_Proto2 && t.tp.CanPointer()) || t.tp.IsPointer() {
 			ret += "*"
 		}
 	case TNT_EMPTYVALUE:
@@ -102,6 +102,7 @@ func (t *TypeConverter_Default) GenerateExport(g *GeneratorFile, varSrc string, 
 
 // Type converter for scalar fields
 type TypeConverter_Scalar struct {
+	tp      *fdep.DepType
 	fldtype string
 }
 
@@ -110,7 +111,7 @@ func (t *TypeConverter_Scalar) TypeName(g *GeneratorFile, tntype TypeConverterTy
 
 	switch tntype {
 	case TNT_FIELD_DEFINITION:
-		if g.G().Syntax() == GeneratorSyntax_Proto2 {
+		if g.G().Syntax() == GeneratorSyntax_Proto2 && t.tp.CanPointer() {
 			ret += "*"
 		}
 	}

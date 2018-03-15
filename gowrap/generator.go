@@ -308,11 +308,14 @@ func (g *Generator) generateMessage(message *fproto.MessageElement) error {
 			}
 
 			var type_prefix string
+			tctn := TNT_FIELD_DEFINITION
 			if xfld.Repeated {
 				type_prefix = "[]"
+				// when array, never add pointer to scalar type
+				tctn = TNT_TYPENAME
 			}
 
-			g.FMain().P(CamelCase(xfld.Name), " ", type_prefix, tc_gowrap.TypeName(g.FMain(), TNT_FIELD_DEFINITION), field_tag.OutputWithSpace())
+			g.FMain().P(CamelCase(xfld.Name), " ", type_prefix, tc_gowrap.TypeName(g.FMain(), tctn), field_tag.OutputWithSpace())
 		case *fproto.MapFieldElement:
 			// fieldname map[keytype]fieldtype
 			g.FMain().GenerateComment(xfld.Comment)
@@ -811,7 +814,7 @@ func (g *Generator) GetGowrapType(scope, fldtype string) (TypeConverter, error) 
 		return nil, err
 	}
 	if isscalar {
-		return &TypeConverter_Scalar{fldtype}, nil
+		return &TypeConverter_Scalar{tp, fldtype}, nil
 	} else {
 		if tc := g.getTypeConv(tp); tc != nil {
 			return tc, nil
@@ -827,7 +830,7 @@ func (g *Generator) GetGoType(scope, fldtype string) (TypeConverter, error) {
 		return nil, err
 	}
 	if isscalar {
-		return &TypeConverter_Scalar{fldtype}, nil
+		return &TypeConverter_Scalar{tp, fldtype}, nil
 	} else {
 		return &TypeConverter_Default{g, tp, g.filedep, false}, nil
 	}
@@ -850,7 +853,8 @@ func (g *Generator) GetBothTypes(scope, fldtype string) (tc_gowrap TypeConverter
 // Get dependent type
 func (g *Generator) GetDepType(scope, fldtype string) (tp *fdep.DepType, isscalar bool, err error) {
 	// check if if scalar
-	if _, ok := fproto.ParseScalarType(fldtype); ok {
+	if scalar, ok := fproto.ParseScalarType(fldtype); ok {
+		tp = g.dep.GetScalarType(scalar)
 		isscalar = true
 	} else {
 		isscalar = false
