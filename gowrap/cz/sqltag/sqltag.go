@@ -16,13 +16,13 @@ func (c *Customizer_SQLTag) GetTag(g *fproto_gowrap.Generator, currentTag *fprot
 	switch fitem := item.(type) {
 	case fproto.FieldElementTag:
 		sqlopt := fitem.FindOption("fproto_wrap.sqltag.tag_disable")
-		if sqlopt != nil && sqlopt.Value == "true" {
+		if sqlopt != nil && sqlopt.Value.String() == "true" {
 			currentTag.Set("sql", "-")
 		} else {
 			fieldname := fproto_gowrap.SnakeCase(fitem.FieldName())
 			fnopt := fitem.FindOption("fproto_wrap.sqltag.tag_fieldname")
-			if fnopt != nil && fnopt.Value != "" {
-				fieldname = fnopt.Value
+			if fnopt != nil && fnopt.Value.String() != "" {
+				fieldname = fnopt.Value.String()
 			}
 			currentTag.Set("sql", fmt.Sprintf("%s,omitempty", fieldname))
 		}

@@ -140,7 +140,7 @@ func (g *Generator) IsFileGowrap(filedep *fdep.FileDep) bool {
 	}
 
 	if o := filedep.ProtoFile.FindOption("fproto_wrap.wrap"); o != nil {
-		if o.Value != "true" {
+		if o.Value.String() != "true" {
 			return false
 		}
 	}
@@ -896,12 +896,12 @@ func (g *Generator) GoWrapPackage(filedep *fdep.FileDep) string {
 
 	for _, o := range filedep.ProtoFile.Options {
 		if o.Name == "gowrap_package" {
-			return o.Value
+			return o.Value.String()
 		}
 	}
 	for _, o := range filedep.ProtoFile.Options {
 		if o.Name == "go_package" {
-			return o.Value
+			return o.Value.String()
 		}
 	}
 	return path.Dir(filedep.FilePath)

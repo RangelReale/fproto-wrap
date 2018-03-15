@@ -16,13 +16,13 @@ func (c *Customizer_JSONTag) GetTag(g *fproto_gowrap.Generator, currentTag *fpro
 	switch fitem := item.(type) {
 	case fproto.FieldElementTag:
 		jsonopt := fitem.FindOption("fproto_wrap.jsontag.tag_disable")
-		if jsonopt != nil && jsonopt.Value == "true" {
+		if jsonopt != nil && jsonopt.Value.String() == "true" {
 			currentTag.Set("json", "-")
 		} else {
 			fieldname := fproto_gowrap.SnakeCase(fitem.FieldName())
 			fnopt := fitem.FindOption("fproto_wrap.jsontag.tag_fieldname")
-			if fnopt != nil && fnopt.Value != "" {
-				fieldname = fnopt.Value
+			if fnopt != nil && fnopt.Value.String() != "" {
+				fieldname = fnopt.Value.String()
 			}
 			currentTag.Set("json", fmt.Sprintf("%s,omitempty", fieldname))
 		}
