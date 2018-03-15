@@ -1,4 +1,4 @@
-package duration
+package fproto_wrap_duration
 
 import (
 	"fmt"

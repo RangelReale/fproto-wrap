@@ -1,4 +1,4 @@
-package jsonobject
+package fproto_wrap_jsonobject
 
 import (
 	"github.com/RangelReale/fproto-wrap/gowrap"

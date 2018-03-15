@@ -1,4 +1,4 @@
-package jsontag
+package fproto_wrap_jsontag
 
 import (
 	"fmt"

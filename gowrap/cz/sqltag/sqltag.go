@@ -1,4 +1,4 @@
-package sqltag
+package fproto_wrap_sqltag
 
 import (
 	"fmt"
