@@ -21,7 +21,7 @@ Currently there is only a Golang wrapper generator.
 
 ### external types
 
-* [Headers](https://github.com/RangelReale/fproto-gowrap-headers) (wraps an HTTP-like header structure, a map of lists of values - map[string][]string)
+* [Headers](https://github.com/RangelReale/fproto-wrap-headers) (wraps an HTTP-like header structure, a map of lists of values - map[string][]string)
 
 ### author
 
