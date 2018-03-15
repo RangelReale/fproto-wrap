@@ -1,6 +1,6 @@
 # fproto-gowrap
 
-[![GoDoc](https://godoc.org/github.com/RangelReale/fproto-gowrap?status.svg)](https://godoc.org/github.com/RangelReale/fproto-gowrap)
+[![GoDoc](https://godoc.org/github.com/RangelReale/fproto-wrap/gowrap?status.svg)](https://godoc.org/github.com/RangelReale/fproto-wrap/gowrap)
 
 Package for generating wrappers to the default Go protobuf generated structs and interfaces. 
 
@@ -34,10 +34,10 @@ option go_package = "gwsample/core";
 
 import "google/protobuf/timestamp.proto";
 import "google/protobuf/empty.proto";
-import "github.com/RangelReale/fproto-gowrap/tc/uuid/uuid.proto";
+import "github.com/RangelReale/fproto-wrap/uuid.proto";
 
 message User {
-    fproto_gowrap.tc.uuid.UUID id = 1;
+    fproto_wrap.UUID id = 1;
     string name = 2;
     string email = 3;
     google.protobuf.Timestamp dt_created = 4;
@@ -58,10 +58,10 @@ message User {
 
 service UserSvc {
     rpc List(google.protobuf.Empty) returns (UserListResponse);
-    rpc Get(fproto_gowrap.tc.uuid.UUID) returns (User);
-    rpc Add(User) returns (fproto_gowrap.tc.uuid.UUID);
+    rpc Get(fproto_wrap.UUID) returns (User);
+    rpc Add(User) returns (fproto_wrap.UUID);
     rpc Modify(User) returns (google.protobuf.Empty);
-    rpc Delete(fproto_gowrap.tc.uuid.UUID) returns (google.protobuf.Empty);
+    rpc Delete(fproto_wrap.UUID) returns (google.protobuf.Empty);
 }
 
 message UserListResponse {
@@ -82,7 +82,7 @@ import fmt "fmt"
 import math "math"
 import google_protobuf1 "github.com/golang/protobuf/ptypes/timestamp"
 import google_protobuf2 "github.com/golang/protobuf/ptypes/empty"
-import fproto_gowrap_tc_uuid "github.com/RangelReale/fproto-gowrap/tc/uuid"
+import gwproto "github.com/RangelReale/fproto-wrap/gowrap/gwproto"
 
 import (
 	context "golang.org/x/net/context"
@@ -121,7 +121,7 @@ func (User_Address_AddressType) EnumDescriptor() ([]byte, []int) {
 }
 
 type User struct {
-	Id        *fproto_gowrap_tc_uuid.UUID `protobuf:"bytes,1,opt,name=id" json:"id,omitempty"`
+	Id        *gwproto.UUID           `protobuf:"bytes,1,opt,name=id" json:"id,omitempty"`
 	Name      string                      `protobuf:"bytes,2,opt,name=name" json:"name,omitempty"`
 	Email     string                      `protobuf:"bytes,3,opt,name=email" json:"email,omitempty"`
 	DtCreated *google_protobuf1.Timestamp `protobuf:"bytes,4,opt,name=dt_created,json=dtCreated" json:"dt_created,omitempty"`
@@ -133,7 +133,7 @@ func (m *User) String() string            { return proto.CompactTextString(m) }
 func (*User) ProtoMessage()               {}
 func (*User) Descriptor() ([]byte, []int) { return fileDescriptor1, []int{0} }
 
-func (m *User) GetId() *fproto_gowrap_tc_uuid.UUID {
+func (m *User) GetId() *gwproto.UUID {
 	if m != nil {
 		return m.Id
 	}
@@ -227,10 +227,10 @@ const _ = grpc.SupportPackageIsVersion4
 
 type UserSvcClient interface {
 	List(ctx context.Context, in *google_protobuf2.Empty, opts ...grpc.CallOption) (*UserListResponse, error)
-	Get(ctx context.Context, in *fproto_gowrap_tc_uuid.UUID, opts ...grpc.CallOption) (*User, error)
-	Add(ctx context.Context, in *User, opts ...grpc.CallOption) (*fproto_gowrap_tc_uuid.UUID, error)
+	Get(ctx context.Context, in *gwproto.UUID, opts ...grpc.CallOption) (*User, error)
+	Add(ctx context.Context, in *User, opts ...grpc.CallOption) (*gwproto.UUID, error)
 	Modify(ctx context.Context, in *User, opts ...grpc.CallOption) (*google_protobuf2.Empty, error)
-	Delete(ctx context.Context, in *fproto_gowrap_tc_uuid.UUID, opts ...grpc.CallOption) (*google_protobuf2.Empty, error)
+	Delete(ctx context.Context, in *gwproto.UUID, opts ...grpc.CallOption) (*google_protobuf2.Empty, error)
 }
 
 type userSvcClient struct {
@@ -250,7 +250,7 @@ func (c *userSvcClient) List(ctx context.Context, in *google_protobuf2.Empty, op
 	return out, nil
 }
 
-func (c *userSvcClient) Get(ctx context.Context, in *fproto_gowrap_tc_uuid.UUID, opts ...grpc.CallOption) (*User, error) {
+func (c *userSvcClient) Get(ctx context.Context, in *gwproto.UUID, opts ...grpc.CallOption) (*User, error) {
 	out := new(User)
 	err := grpc.Invoke(ctx, "/gw_sample.UserSvc/Get", in, out, c.cc, opts...)
 	if err != nil {
@@ -259,8 +259,8 @@ func (c *userSvcClient) Get(ctx context.Context, in *fproto_gowrap_tc_uuid.UUID,
 	return out, nil
 }
 
-func (c *userSvcClient) Add(ctx context.Context, in *User, opts ...grpc.CallOption) (*fproto_gowrap_tc_uuid.UUID, error) {
-	out := new(fproto_gowrap_tc_uuid.UUID)
+func (c *userSvcClient) Add(ctx context.Context, in *User, opts ...grpc.CallOption) (*gwproto.UUID, error) {
+	out := new(gwproto.UUID)
 	err := grpc.Invoke(ctx, "/gw_sample.UserSvc/Add", in, out, c.cc, opts...)
 	if err != nil {
 		return nil, err
@@ -277,7 +277,7 @@ func (c *userSvcClient) Modify(ctx context.Context, in *User, opts ...grpc.CallO
 	return out, nil
 }
 
-func (c *userSvcClient) Delete(ctx context.Context, in *fproto_gowrap_tc_uuid.UUID, opts ...grpc.CallOption) (*google_protobuf2.Empty, error) {
+func (c *userSvcClient) Delete(ctx context.Context, in *gwproto.UUID, opts ...grpc.CallOption) (*google_protobuf2.Empty, error) {
 	out := new(google_protobuf2.Empty)
 	err := grpc.Invoke(ctx, "/gw_sample.UserSvc/Delete", in, out, c.cc, opts...)
 	if err != nil {
@@ -290,10 +290,10 @@ func (c *userSvcClient) Delete(ctx context.Context, in *fproto_gowrap_tc_uuid.UU
 
 type UserSvcServer interface {
 	List(context.Context, *google_protobuf2.Empty) (*UserListResponse, error)
-	Get(context.Context, *fproto_gowrap_tc_uuid.UUID) (*User, error)
-	Add(context.Context, *User) (*fproto_gowrap_tc_uuid.UUID, error)
+	Get(context.Context, *gwproto.UUID) (*User, error)
+	Add(context.Context, *User) (*gwproto.UUID, error)
 	Modify(context.Context, *User) (*google_protobuf2.Empty, error)
-	Delete(context.Context, *fproto_gowrap_tc_uuid.UUID) (*google_protobuf2.Empty, error)
+	Delete(context.Context, *gwproto.UUID) (*google_protobuf2.Empty, error)
 }
 
 func RegisterUserSvcServer(s *grpc.Server, srv UserSvcServer) {
@@ -310,10 +310,10 @@ package main
 import (
 	"log"
 	
-	"github.com/RangelReale/fproto-gowrap"
-	"github.com/RangelReale/fproto-gowrap/cz/jsontag"
-	"github.com/RangelReale/fproto-gowrap/tc/time"
-	"github.com/RangelReale/fproto-gowrap/tc/uuid"
+	"github.com/RangelReale/fproto-wrap/gowrap"
+	"github.com/RangelReale/fproto-wrap/gowrap/cz/jsontag"
+	"github.com/RangelReale/fproto-wrap/gowrap/tc/time"
+	"github.com/RangelReale/fproto-wrap/gowrap/tc/uuid"
 	"github.com/RangelReale/fproto/fdep"
 )
 
@@ -327,8 +327,8 @@ func main() {
 		log.Fatal(err)
 	}
 	
-	// Add the GoWrap UUID type
-	err = parsedep.AddPathWithRoot("github.com/RangelReale/fproto-gowrap", `C:\go\src\github.com\RangelReale\fproto-gowrap`, fdep.DepType_Imported)
+	// Add the fproto-wrap types
+	err = parsedep.AddPathWithRoot("github.com/RangelReale/fproto-wrap", `C:\go\src\github.com\RangelReale\fproto-wrap`, fdep.DepType_Imported)
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -377,7 +377,7 @@ import (
 	uuid "github.com/RangelReale/go.uuid"
 	time "time"
 	pb_types "github.com/golang/protobuf/ptypes"
-	fproto_gowrap_tc_uuid "github.com/RangelReale/fproto-gowrap/tc/uuid"
+	gwproto "github.com/RangelReale/fproto-wrap/gowrap/gwproto"
 	context "golang.org/x/net/context"
 	grpc "google.golang.org/grpc"
 	google_protobuf "github.com/golang/protobuf/ptypes/empty"
@@ -423,7 +423,7 @@ func User_Import(s *core.User) (*User, error) {
 func (m *User) Export() (*core.User, error) {
 	var err error
 	ret := &core.User{}
-	ret.Id = &fproto_gowrap_tc_uuid.UUID{}
+	ret.Id = &gwproto.UUID{}
 	ret.Id.Value = m.Id.String()
 	ret.Name = m.Name
 	ret.Email = m.Email
@@ -557,8 +557,8 @@ func (w *wrapUserSvcClient) List(ctx context.Context, in *google_protobuf.Empty,
 func (w *wrapUserSvcClient) Get(ctx context.Context, in uuid.UUID, opts ...grpc.CallOption) (*User, error) {
 	var err error
 
-	var wreq *fproto_gowrap_tc_uuid.UUID
-	wreq = &fproto_gowrap_tc_uuid.UUID{}
+	var wreq *gwproto.UUID
+	wreq = &gwproto.UUID{}
 	wreq.Value = in.String()
 
 	resp, err := w.cli.Get(ctx, wreq)
@@ -623,8 +623,8 @@ func (w *wrapUserSvcClient) Modify(ctx context.Context, in *User, opts ...grpc.C
 func (w *wrapUserSvcClient) Delete(ctx context.Context, in uuid.UUID, opts ...grpc.CallOption) (*google_protobuf.Empty, error) {
 	var err error
 
-	var wreq *fproto_gowrap_tc_uuid.UUID
-	wreq = &fproto_gowrap_tc_uuid.UUID{}
+	var wreq *gwproto.UUID
+	wreq = &gwproto.UUID{}
 	wreq.Value = in.String()
 
 	resp, err := w.cli.Delete(ctx, wreq)
@@ -675,7 +675,7 @@ func (w *wrapUserSvcServer) List(ctx context.Context, req *google_protobuf.Empty
 	return wresp, nil
 }
 
-func (w *wrapUserSvcServer) Get(ctx context.Context, req *fproto_gowrap_tc_uuid.UUID) (*core.User, error) {
+func (w *wrapUserSvcServer) Get(ctx context.Context, req *gwproto.UUID) (*core.User, error) {
 	var err error
 
 	var wreq uuid.UUID
@@ -700,22 +700,22 @@ func (w *wrapUserSvcServer) Get(ctx context.Context, req *fproto_gowrap_tc_uuid.
 	return wresp, nil
 }
 
-func (w *wrapUserSvcServer) Add(ctx context.Context, req *core.User) (*fproto_gowrap_tc_uuid.UUID, error) {
+func (w *wrapUserSvcServer) Add(ctx context.Context, req *core.User) (*gwproto.UUID, error) {
 	var err error
 
 	var wreq *User
 	wreq, err = User_Import(req)
 	if err != nil {
-		return &fproto_gowrap_tc_uuid.UUID{}, err
+		return &gwproto.UUID{}, err
 	}
 
 	resp, err := w.srv.Add(ctx, wreq)
 	if err != nil {
-		return &fproto_gowrap_tc_uuid.UUID{}, err
+		return &gwproto.UUID{}, err
 	}
 
-	var wresp *fproto_gowrap_tc_uuid.UUID
-	wresp = &fproto_gowrap_tc_uuid.UUID{}
+	var wresp *gwproto.UUID
+	wresp = &gwproto.UUID{}
 	wresp.Value = resp.String()
 
 	return wresp, nil
@@ -741,7 +741,7 @@ func (w *wrapUserSvcServer) Modify(ctx context.Context, req *core.User) (*google
 	return wresp, nil
 }
 
-func (w *wrapUserSvcServer) Delete(ctx context.Context, req *fproto_gowrap_tc_uuid.UUID) (*google_protobuf.Empty, error) {
+func (w *wrapUserSvcServer) Delete(ctx context.Context, req *gwproto.UUID) (*google_protobuf.Empty, error) {
 	var err error
 
 	var wreq uuid.UUID
