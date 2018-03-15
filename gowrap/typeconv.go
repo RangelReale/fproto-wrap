@@ -19,14 +19,14 @@ type TypeConverterPlugin interface {
 
 type TypeConverter interface {
 	// Gets the type name in relation to the current file
-	TypeName(g *Generator, tntype TypeConverterTypeNameType) string
+	TypeName(g *GeneratorFile, tntype TypeConverterTypeNameType) string
 
 	// Returns if the underlining type is a pointer
 	IsPointer() bool
 
 	// Generates code to import the type from the Go protobuf generated type
-	GenerateImport(g *Generator, varSrc string, varDest string, varError string) (checkError bool, err error)
+	GenerateImport(g *GeneratorFile, varSrc string, varDest string, varError string) (checkError bool, err error)
 
 	// Generates code to export the type to the Go protobuf generated type
-	GenerateExport(g *Generator, varSrc string, varDest string, varError string) (checkError bool, err error)
+	GenerateExport(g *GeneratorFile, varSrc string, varDest string, varError string) (checkError bool, err error)
 }

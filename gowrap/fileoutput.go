@@ -8,7 +8,7 @@ import (
 type FileOutput interface {
 	Initialize() error
 	Finalize() error
-	Output(g *Generator) error
+	Output(g *GeneratorFile) error
 }
 
 // FileOutput_Default
@@ -30,7 +30,7 @@ func (f *FileOutput_Default) Finalize() error {
 	return nil
 }
 
-func (f *FileOutput_Default) Output(g *Generator) error {
+func (f *FileOutput_Default) Output(g *GeneratorFile) error {
 	p := filepath.Join(f.OutputPath, g.Filename())
 
 	// create paths

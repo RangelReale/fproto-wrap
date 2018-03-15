@@ -16,7 +16,7 @@ type TypeConverter_Default struct {
 	is_gowrap bool
 }
 
-func (t *TypeConverter_Default) TypeName(g *Generator, tntype TypeConverterTypeNameType) string {
+func (t *TypeConverter_Default) TypeName(g *GeneratorFile, tntype TypeConverterTypeNameType) string {
 	ret := ""
 
 	switch tntype {
@@ -25,7 +25,7 @@ func (t *TypeConverter_Default) TypeName(g *Generator, tntype TypeConverterTypeN
 			ret += "*"
 		}
 	case TNT_FIELD_DEFINITION:
-		if g.Syntax() == GeneratorSyntax_Proto2 || t.tp.IsPointer() {
+		if g.G().Syntax() == GeneratorSyntax_Proto2 || t.tp.IsPointer() {
 			ret += "*"
 		}
 	case TNT_EMPTYVALUE:
@@ -42,7 +42,7 @@ func (t *TypeConverter_Default) TypeName(g *Generator, tntype TypeConverterTypeN
 		//_ = g.FileDep(tp.FileDep, tp.Alias)
 		ret += fmt.Sprintf("%s", strings.Replace(t.tp.Name, ".", "_", -1))
 	} else {
-		falias := t.g.FileDep(t.tp.FileDep, t.tp.Alias, t.is_gowrap)
+		falias := g.FileDep(t.tp.FileDep, t.tp.Alias, t.is_gowrap)
 		ret += fmt.Sprintf("%s.%s", falias, strings.Replace(t.tp.Name, ".", "_", -1))
 	}
 
@@ -60,15 +60,15 @@ func (t *TypeConverter_Default) IsPointer() bool {
 	return t.tp.IsPointer()
 }
 
-func (t *TypeConverter_Default) GenerateImport(g *Generator, varSrc string, varDest string, varError string) (checkError bool, err error) {
-	if !g.IsFileGowrap(t.tp.FileDep) {
+func (t *TypeConverter_Default) GenerateImport(g *GeneratorFile, varSrc string, varDest string, varError string) (checkError bool, err error) {
+	if !g.G().IsFileGowrap(t.tp.FileDep) {
 		g.P(varDest, " = ", varSrc)
 		return false, nil
 	}
 
 	var falias string
 	if !t.is_gowrap || !t.tp.FileDep.IsSamePackage(t.filedep) {
-		falias = t.g.FileDep(t.tp.FileDep, t.tp.Alias, t.is_gowrap) + "."
+		falias = g.FileDep(t.tp.FileDep, t.tp.Alias, t.is_gowrap) + "."
 	}
 
 	switch t.tp.Item.(type) {
@@ -83,8 +83,8 @@ func (t *TypeConverter_Default) GenerateImport(g *Generator, varSrc string, varD
 	return true, nil
 }
 
-func (t *TypeConverter_Default) GenerateExport(g *Generator, varSrc string, varDest string, varError string) (checkError bool, err error) {
-	if !g.IsFileGowrap(t.tp.FileDep) {
+func (t *TypeConverter_Default) GenerateExport(g *GeneratorFile, varSrc string, varDest string, varError string) (checkError bool, err error) {
+	if !g.G().IsFileGowrap(t.tp.FileDep) {
 		g.P(varDest, " = ", varSrc)
 		return false, nil
 	}
@@ -105,12 +105,12 @@ type TypeConverter_Scalar struct {
 	fldtype string
 }
 
-func (t *TypeConverter_Scalar) TypeName(g *Generator, tntype TypeConverterTypeNameType) string {
+func (t *TypeConverter_Scalar) TypeName(g *GeneratorFile, tntype TypeConverterTypeNameType) string {
 	var ret string
 
 	switch tntype {
 	case TNT_FIELD_DEFINITION:
-		if g.Syntax() == GeneratorSyntax_Proto2 {
+		if g.G().Syntax() == GeneratorSyntax_Proto2 {
 			ret += "*"
 		}
 	}
@@ -126,13 +126,13 @@ func (t *TypeConverter_Scalar) IsPointer() bool {
 	return false
 }
 
-func (t *TypeConverter_Scalar) GenerateImport(g *Generator, varSrc string, varDest string, varError string) (checkError bool, err error) {
+func (t *TypeConverter_Scalar) GenerateImport(g *GeneratorFile, varSrc string, varDest string, varError string) (checkError bool, err error) {
 	// just assign
 	g.P(varDest, " = ", varSrc)
 	return false, nil
 }
 
-func (t *TypeConverter_Scalar) GenerateExport(g *Generator, varSrc string, varDest string, varError string) (checkError bool, err error) {
+func (t *TypeConverter_Scalar) GenerateExport(g *GeneratorFile, varSrc string, varDest string, varError string) (checkError bool, err error) {
 	// just assign
 	g.P(varDest, " = ", varSrc)
 	return false, nil

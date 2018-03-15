@@ -37,7 +37,7 @@ func (t *TypeConverterPlugin_UUID) GetTypeConverter(tp *fdep.DepType) fproto_gow
 type TypeConverter_UUID struct {
 }
 
-func (t *TypeConverter_UUID) TypeName(g *fproto_gowrap.Generator, tntype fproto_gowrap.TypeConverterTypeNameType) string {
+func (t *TypeConverter_UUID) TypeName(g *fproto_gowrap.GeneratorFile, tntype fproto_gowrap.TypeConverterTypeNameType) string {
 	alias := g.Dep("github.com/RangelReale/go.uuid", "uuid")
 
 	switch tntype {
@@ -52,7 +52,7 @@ func (t *TypeConverter_UUID) IsPointer() bool {
 	return false
 }
 
-func (t *TypeConverter_UUID) GenerateImport(g *fproto_gowrap.Generator, varSrc string, varDest string, varError string) (checkError bool, err error) {
+func (t *TypeConverter_UUID) GenerateImport(g *fproto_gowrap.GeneratorFile, varSrc string, varDest string, varError string) (checkError bool, err error) {
 	alias := g.Dep("github.com/RangelReale/go.uuid", "uuid")
 
 	g.P("if ", varSrc, " != nil {")
@@ -64,8 +64,8 @@ func (t *TypeConverter_UUID) GenerateImport(g *fproto_gowrap.Generator, varSrc s
 	return true, nil
 }
 
-func (t *TypeConverter_UUID) GenerateExport(g *fproto_gowrap.Generator, varSrc string, varDest string, varError string) (checkError bool, err error) {
-	tc_go, err := g.GetGoType("", "fproto_wrap.UUID")
+func (t *TypeConverter_UUID) GenerateExport(g *fproto_gowrap.GeneratorFile, varSrc string, varDest string, varError string) (checkError bool, err error) {
+	tc_go, err := g.G().GetGoType("", "fproto_wrap.UUID")
 	if err != nil {
 		return false, err
 	}
@@ -83,7 +83,7 @@ func (t *TypeConverter_UUID) GenerateExport(g *fproto_gowrap.Generator, varSrc s
 type TypeConverter_NullUUID struct {
 }
 
-func (t *TypeConverter_NullUUID) TypeName(g *fproto_gowrap.Generator, tntype fproto_gowrap.TypeConverterTypeNameType) string {
+func (t *TypeConverter_NullUUID) TypeName(g *fproto_gowrap.GeneratorFile, tntype fproto_gowrap.TypeConverterTypeNameType) string {
 	alias := g.Dep("github.com/RangelReale/go.uuid", "uuid")
 
 	switch tntype {
@@ -98,7 +98,7 @@ func (t *TypeConverter_NullUUID) IsPointer() bool {
 	return false
 }
 
-func (t *TypeConverter_NullUUID) GenerateImport(g *fproto_gowrap.Generator, varSrc string, varDest string, varError string) (checkError bool, err error) {
+func (t *TypeConverter_NullUUID) GenerateImport(g *fproto_gowrap.GeneratorFile, varSrc string, varDest string, varError string) (checkError bool, err error) {
 	alias := g.Dep("github.com/RangelReale/go.uuid", "uuid")
 
 	g.P("if ", varSrc, " != nil {")
@@ -121,8 +121,8 @@ func (t *TypeConverter_NullUUID) GenerateImport(g *fproto_gowrap.Generator, varS
 	return true, nil
 }
 
-func (t *TypeConverter_NullUUID) GenerateExport(g *fproto_gowrap.Generator, varSrc string, varDest string, varError string) (checkError bool, err error) {
-	tc_go, err := g.GetGoType("", "fproto_wrap.NullUUID")
+func (t *TypeConverter_NullUUID) GenerateExport(g *fproto_gowrap.GeneratorFile, varSrc string, varDest string, varError string) (checkError bool, err error) {
+	tc_go, err := g.G().GetGoType("", "fproto_wrap.NullUUID")
 	if err != nil {
 		return false, err
 	}

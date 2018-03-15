@@ -1,8 +1,6 @@
 package fproto_gowrap
 
 import (
-	"io"
-
 	"github.com/RangelReale/fproto/fdep"
 )
 
@@ -24,7 +22,7 @@ func NewWrapper(dep *fdep.Dep) *Wrapper {
 }
 
 // Generates one file
-func (wp *Wrapper) GenerateFile(filename string, w io.Writer) error {
+func (wp *Wrapper) GenerateFile(filename string, output FileOutput) error {
 	g, err := NewGenerator(wp.dep, filename)
 	g.PkgSource = wp.PkgSource
 	g.TypeConverters = wp.TypeConverters
@@ -39,8 +37,17 @@ func (wp *Wrapper) GenerateFile(filename string, w io.Writer) error {
 		return err
 	}
 
-	err = g.Output(w)
-	return err
+	// write all files
+	for _, gf := range g.Files {
+		if gf != nil {
+			err = output.Output(gf)
+			if err != nil {
+				return err
+			}
+		}
+	}
+
+	return nil
 }
 
 // Generates all owned files.
@@ -69,10 +76,16 @@ func (wp *Wrapper) Generate(output FileOutput) error {
 				return err
 			}
 
-			err = output.Output(g)
-			if err != nil {
-				return err
+			// write all files
+			for _, gf := range g.Files {
+				if gf != nil {
+					err = output.Output(gf)
+					if err != nil {
+						return err
+					}
+				}
 			}
+
 		}
 	}
 	return nil

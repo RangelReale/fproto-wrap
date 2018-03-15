@@ -24,7 +24,7 @@ func (t *TypeConverterPlugin_Duration) GetTypeConverter(tp *fdep.DepType) fproto
 type TypeConverter_Duration struct {
 }
 
-func (t *TypeConverter_Duration) TypeName(g *fproto_gowrap.Generator, tntype fproto_gowrap.TypeConverterTypeNameType) string {
+func (t *TypeConverter_Duration) TypeName(g *fproto_gowrap.GeneratorFile, tntype fproto_gowrap.TypeConverterTypeNameType) string {
 	alias := g.Dep("time", "time")
 	return fmt.Sprintf("%s.%s", alias, "Duration")
 }
@@ -33,7 +33,7 @@ func (t *TypeConverter_Duration) IsPointer() bool {
 	return false
 }
 
-func (t *TypeConverter_Duration) GenerateImport(g *fproto_gowrap.Generator, varSrc string, varDest string, varError string) (checkError bool, err error) {
+func (t *TypeConverter_Duration) GenerateImport(g *fproto_gowrap.GeneratorFile, varSrc string, varDest string, varError string) (checkError bool, err error) {
 	pb_alias := g.Dep("github.com/golang/protobuf/ptypes", "pb_types")
 
 	g.P("if ", varSrc, " != nil {")
@@ -45,7 +45,7 @@ func (t *TypeConverter_Duration) GenerateImport(g *fproto_gowrap.Generator, varS
 	return true, nil
 }
 
-func (t *TypeConverter_Duration) GenerateExport(g *fproto_gowrap.Generator, varSrc string, varDest string, varError string) (checkError bool, err error) {
+func (t *TypeConverter_Duration) GenerateExport(g *fproto_gowrap.GeneratorFile, varSrc string, varDest string, varError string) (checkError bool, err error) {
 	pb_alias := g.Dep("github.com/golang/protobuf/ptypes", "pb_types")
 
 	g.P(varDest, " = ", pb_alias, ".DurationProto(", varSrc, ")")

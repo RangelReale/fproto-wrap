@@ -1,16 +1,8 @@
 package fproto_gowrap
 
 import (
-	"bufio"
-	"bytes"
-	"errors"
 	"fmt"
-	"go/parser"
-	"go/printer"
-	"go/token"
-	"io"
 	"path"
-	"sort"
 	"strings"
 
 	"github.com/RangelReale/fproto"
@@ -26,14 +18,17 @@ const (
 
 // Generators generates a wrapper for a single file.
 type Generator struct {
-	*bytes.Buffer
-	indent string
+	//*bytes.Buffer
+	//indent string
 
 	dep        *fdep.Dep
 	filedep    *fdep.FileDep
 	tc_default TypeConverter
 
-	imports map[string]string
+	//imports map[string]string
+
+	Files      map[string]*GeneratorFile
+	FilesAlias map[string]string
 
 	// Interface to do package name generation.
 	PkgSource PkgSource
@@ -55,12 +50,51 @@ func NewGenerator(dep *fdep.Dep, filepath string) (*Generator, error) {
 		return nil, fmt.Errorf("File %s not found", filepath)
 	}
 
-	return &Generator{
-		Buffer:  new(bytes.Buffer),
+	ret := &Generator{
+		//Buffer:  new(bytes.Buffer),
 		dep:     dep,
 		filedep: filedep,
-		imports: make(map[string]string),
-	}, nil
+		//imports: make(map[string]string),
+		Files:      make(map[string]*GeneratorFile),
+		FilesAlias: make(map[string]string),
+	}
+
+	ret.Files["main"] = NewGeneratorFile(ret, "main", "")
+
+	// Alias import_export to main
+	ret.FilesAlias["import_export"] = "main"
+	// Alias service to main
+	ret.FilesAlias["service"] = "main"
+
+	return ret, nil
+}
+
+func (g *Generator) F(fileId string) *GeneratorFile {
+	if gf, ok := g.Files[fileId]; ok {
+		return gf
+	}
+
+	// Search in alias
+	if gfa, ok := g.FilesAlias[fileId]; ok {
+		if fileId == gfa {
+			panic("Infinite loop")
+		}
+		return g.F(gfa)
+	}
+
+	return nil
+}
+
+func (g *Generator) FMain() *GeneratorFile {
+	return g.F("main")
+}
+
+func (g *Generator) FImpExp() *GeneratorFile {
+	return g.F("import_export")
+}
+
+func (g *Generator) FService() *GeneratorFile {
+	return g.F("service")
 }
 
 // Gets the syntax
@@ -207,7 +241,8 @@ func (g *Generator) generateMessage(message *fproto.MessageElement) error {
 	}
 
 	// build aliases to the original type
-	go_alias := g.FileDep(nil, "", false)
+	//go_alias := g.FMain().FileDep(nil, "", false)
+	go_alias_ie := g.FImpExp().FileDep(nil, "", false)
 
 	// Get the message scope on the current file as an array
 	scope := g.GetScope(message)
@@ -225,12 +260,12 @@ func (g *Generator) generateMessage(message *fproto.MessageElement) error {
 	//
 	// type MyMessage struct
 	//
-	if !g.GenerateComment(message.Comment) {
-		g.GenerateCommentLine("MESSAGE: ", msgscopedpbnamestr)
+	if !g.FMain().GenerateComment(message.Comment) {
+		g.FMain().GenerateCommentLine("MESSAGE: ", msgscopedpbnamestr)
 	}
 
-	g.P("type ", structName, " struct {")
-	g.In()
+	g.FMain().P("type ", structName, " struct {")
+	g.FMain().In()
 
 	for _, fld := range message.Fields {
 		// CUSTOMIZER
@@ -244,7 +279,7 @@ func (g *Generator) generateMessage(message *fproto.MessageElement) error {
 		switch xfld := fld.(type) {
 		case *fproto.FieldElement:
 			// fieldname fieldtype
-			g.GenerateComment(xfld.Comment)
+			g.FMain().GenerateComment(xfld.Comment)
 
 			tc_gowrap, err := g.GetGowrapType(msgscopednamestr, xfld.Type)
 			if err != nil {
@@ -256,10 +291,10 @@ func (g *Generator) generateMessage(message *fproto.MessageElement) error {
 				type_prefix = "[]"
 			}
 
-			g.P(CamelCase(xfld.Name), " ", type_prefix, tc_gowrap.TypeName(g, TNT_FIELD_DEFINITION), field_tag.OutputWithSpace())
+			g.FMain().P(CamelCase(xfld.Name), " ", type_prefix, tc_gowrap.TypeName(g.FMain(), TNT_FIELD_DEFINITION), field_tag.OutputWithSpace())
 		case *fproto.MapFieldElement:
 			// fieldname map[keytype]fieldtype
-			g.GenerateComment(xfld.Comment)
+			g.FMain().GenerateComment(xfld.Comment)
 
 			tc_gowrap, err := g.GetGowrapType(msgscopednamestr, xfld.Type)
 			if err != nil {
@@ -270,42 +305,42 @@ func (g *Generator) generateMessage(message *fproto.MessageElement) error {
 				return err
 			}
 
-			g.P(CamelCase(xfld.Name), " map[", keytc_gowrap.TypeName(g, TNT_TYPENAME), "]", tc_gowrap.TypeName(g, TNT_TYPENAME), field_tag.OutputWithSpace())
+			g.FMain().P(CamelCase(xfld.Name), " map[", keytc_gowrap.TypeName(g.FMain(), TNT_TYPENAME), "]", tc_gowrap.TypeName(g.FMain(), TNT_TYPENAME), field_tag.OutputWithSpace())
 		case *fproto.OneofFieldElement:
 			// fieldname isSTRUCT_ONEOF
-			g.GenerateComment(xfld.Comment)
+			g.FMain().GenerateComment(xfld.Comment)
 
 			ooscopedname := append(msgscopedname, CamelCase(xfld.Name))
 			ooscopednamestr := CamelCaseSlice(ooscopedname)
 
-			g.P(CamelCase(xfld.Name), " is", ooscopednamestr, field_tag.OutputWithSpace())
+			g.FMain().P(CamelCase(xfld.Name), " is", ooscopednamestr, field_tag.OutputWithSpace())
 		}
 	}
 
-	g.Out()
-	g.P("}")
-	g.P()
+	g.FMain().Out()
+	g.FMain().P("}")
+	g.FMain().P()
 
 	//
 	// func MyMessage_Import(s *go_package.MyMessage) (*MyMessage, error)
 	//
-	g.GenerateCommentLine("IMPORT: ", msgscopedpbnamestr)
+	g.FImpExp().GenerateCommentLine("IMPORT: ", msgscopedpbnamestr)
 
-	g.P("func ", structName, "_Import(s *", go_alias, ".", structName, ") (*", structName, ", error) {")
-	g.In()
+	g.FImpExp().P("func ", structName, "_Import(s *", go_alias_ie, ".", structName, ") (*", structName, ", error) {")
+	g.FImpExp().In()
 
-	g.P("if s == nil {")
-	g.In()
-	g.P("return nil, nil")
-	g.Out()
-	g.P("}")
-	g.P()
+	g.FImpExp().P("if s == nil {")
+	g.FImpExp().In()
+	g.FImpExp().P("return nil, nil")
+	g.FImpExp().Out()
+	g.FImpExp().P("}")
+	g.FImpExp().P()
 
-	g.P("var err error")
-	g.P("ret := &", structName, "{}")
+	g.FImpExp().P("var err error")
+	g.FImpExp().P("ret := &", structName, "{}")
 
 	for _, fld := range message.Fields {
-		g.P("// ", msgscopedpbnamestr, ".", fld.FieldName())
+		g.FImpExp().P("// ", msgscopedpbnamestr, ".", fld.FieldName())
 
 		switch xfld := fld.(type) {
 		case *fproto.FieldElement:
@@ -318,27 +353,27 @@ func (g *Generator) generateMessage(message *fproto.MessageElement) error {
 			source_field := "s." + CamelCase(xfld.Name)
 			dest_field := "ret." + CamelCase(xfld.Name)
 			if xfld.Repeated {
-				g.P("for _, ms := range s.", CamelCase(xfld.Name), " {")
-				g.In()
-				g.P("var msi ", tc_gowrap.TypeName(g, TNT_TYPENAME))
+				g.FImpExp().P("for _, ms := range s.", CamelCase(xfld.Name), " {")
+				g.FImpExp().In()
+				g.FImpExp().P("var msi ", tc_gowrap.TypeName(g.FImpExp(), TNT_TYPENAME))
 
 				source_field = "ms"
 				dest_field = "msi"
 			}
 
-			check_error, err := tc_gowrap.GenerateImport(g, source_field, dest_field, "err")
+			check_error, err := tc_gowrap.GenerateImport(g.FImpExp(), source_field, dest_field, "err")
 			if err != nil {
 				return err
 			}
 			if check_error {
-				g.GenerateErrorCheck("&" + structName + "{}")
+				g.FImpExp().GenerateErrorCheck("&" + structName + "{}")
 			}
 
 			if xfld.Repeated {
-				g.P("ret.", CamelCase(xfld.Name), " = append(ret.", CamelCase(xfld.Name), ", msi)")
+				g.FImpExp().P("ret.", CamelCase(xfld.Name), " = append(ret.", CamelCase(xfld.Name), ", msi)")
 
-				g.Out()
-				g.P("}")
+				g.FImpExp().Out()
+				g.FImpExp().P("}")
 			}
 		case *fproto.MapFieldElement:
 			// fieldname map[keytype]fieldtype
@@ -348,24 +383,24 @@ func (g *Generator) generateMessage(message *fproto.MessageElement) error {
 				return err
 			}
 
-			g.P("for msidx, ms := range s.", CamelCase(xfld.Name), " {")
-			g.In()
-			g.P("var msi ", tc_gowrap.TypeName(g, TNT_TYPENAME))
+			g.FImpExp().P("for msidx, ms := range s.", CamelCase(xfld.Name), " {")
+			g.FImpExp().In()
+			g.FImpExp().P("var msi ", tc_gowrap.TypeName(g.FImpExp(), TNT_TYPENAME))
 
-			check_error, err := tc_gowrap.GenerateImport(g, "ms", "msi", "err")
+			check_error, err := tc_gowrap.GenerateImport(g.FImpExp(), "ms", "msi", "err")
 			if err != nil {
 				return err
 			}
 			if check_error {
-				g.GenerateErrorCheck("&" + structName + "{}")
+				g.FImpExp().GenerateErrorCheck("&" + structName + "{}")
 			}
 
-			g.P("ret.", CamelCase(xfld.Name), "[msidx] = msi")
+			g.FImpExp().P("ret.", CamelCase(xfld.Name), "[msidx] = msi")
 
-			g.Out()
-			g.P("}")
+			g.FImpExp().Out()
+			g.FImpExp().P("}")
 		case *fproto.OneofFieldElement:
-			g.P("switch en := s.", CamelCase(xfld.Name), ".(type) {")
+			g.FImpExp().P("switch en := s.", CamelCase(xfld.Name), ".(type) {")
 
 			//ooscopedname := append(msgscopedname, CamelCase(xfld.Name))
 			//ooscopednamestr := CamelCaseSlice(ooscopedname)
@@ -376,48 +411,48 @@ func (g *Generator) generateMessage(message *fproto.MessageElement) error {
 					oofldscopedname := append(msgscopedname, CamelCase(xoofld.Name))
 					oofldscopednamestr := CamelCaseSlice(oofldscopedname)
 
-					g.P("case *", go_alias, ".", oofldscopednamestr, ":")
-					g.In()
+					g.FImpExp().P("case *", go_alias_ie, ".", oofldscopednamestr, ":")
+					g.FImpExp().In()
 
-					g.P("ret.", CamelCase(xfld.Name), ", err = ", oofldscopednamestr, "_Import(en)")
+					g.FImpExp().P("ret.", CamelCase(xfld.Name), ", err = ", oofldscopednamestr, "_Import(en)")
 
-					g.Out()
+					g.FImpExp().Out()
 				}
 			}
 
-			g.P("}")
+			g.FImpExp().P("}")
 
-			g.GenerateErrorCheck("&" + structName + "{}")
+			g.FImpExp().GenerateErrorCheck("&" + structName + "{}")
 		}
 	}
 
-	g.P("return ret, err")
+	g.FImpExp().P("return ret, err")
 
-	g.Out()
-	g.P("}")
+	g.FImpExp().Out()
+	g.FImpExp().P("}")
 
-	g.P()
+	g.FImpExp().P()
 
 	//
 	// func (m *MyMessage) Export() (*go_package.MyMessage, error)
 	//
-	g.GenerateCommentLine("EXPORT: ", msgscopedpbnamestr)
+	g.FImpExp().GenerateCommentLine("EXPORT: ", msgscopedpbnamestr)
 
-	g.P("func (m *", structName, ") Export() (*", go_alias, ".", structName, ", error) {")
-	g.In()
+	g.FImpExp().P("func (m *", structName, ") Export() (*", go_alias_ie, ".", structName, ", error) {")
+	g.FImpExp().In()
 
-	g.P("if m == nil {")
-	g.In()
-	g.P("return nil, nil")
-	g.Out()
-	g.P("}")
-	g.P()
+	g.FImpExp().P("if m == nil {")
+	g.FImpExp().In()
+	g.FImpExp().P("return nil, nil")
+	g.FImpExp().Out()
+	g.FImpExp().P("}")
+	g.FImpExp().P()
 
-	g.P("var err error")
-	g.P("ret := &", go_alias, ".", structName, "{}")
+	g.FImpExp().P("var err error")
+	g.FImpExp().P("ret := &", go_alias_ie, ".", structName, "{}")
 
 	for _, fld := range message.Fields {
-		g.P("// ", msgscopedpbnamestr, ".", fld.FieldName())
+		g.FImpExp().P("// ", msgscopedpbnamestr, ".", fld.FieldName())
 		switch xfld := fld.(type) {
 		case *fproto.FieldElement:
 			// fieldname = go_package.fieldname
@@ -430,27 +465,27 @@ func (g *Generator) generateMessage(message *fproto.MessageElement) error {
 			source_field := "m." + CamelCase(xfld.Name)
 			dest_field := "ret." + CamelCase(xfld.Name)
 			if xfld.Repeated {
-				g.P("for _, ms := range m.", CamelCase(xfld.Name), " {")
-				g.In()
-				g.P("var msi ", tc_go.TypeName(g, TNT_TYPENAME))
+				g.FImpExp().P("for _, ms := range m.", CamelCase(xfld.Name), " {")
+				g.FImpExp().In()
+				g.FImpExp().P("var msi ", tc_go.TypeName(g.FImpExp(), TNT_TYPENAME))
 
 				source_field = "ms"
 				dest_field = "msi"
 			}
 
-			check_error, err := tc_gowrap.GenerateExport(g, source_field, dest_field, "err")
+			check_error, err := tc_gowrap.GenerateExport(g.FImpExp(), source_field, dest_field, "err")
 			if err != nil {
 				return err
 			}
 			if check_error {
-				g.GenerateErrorCheck("&" + go_alias + "." + structName + "{}")
+				g.FImpExp().GenerateErrorCheck("&" + go_alias_ie + "." + structName + "{}")
 			}
 
 			if xfld.Repeated {
-				g.P("ret.", CamelCase(xfld.Name), " = append(ret.", CamelCase(xfld.Name), ", msi)")
+				g.FImpExp().P("ret.", CamelCase(xfld.Name), " = append(ret.", CamelCase(xfld.Name), ", msi)")
 
-				g.Out()
-				g.P("}")
+				g.FImpExp().Out()
+				g.FImpExp().P("}")
 			}
 
 		case *fproto.MapFieldElement:
@@ -461,24 +496,24 @@ func (g *Generator) generateMessage(message *fproto.MessageElement) error {
 				return err
 			}
 
-			g.P("for msidx, ms := range m.", CamelCase(xfld.Name), " {")
-			g.In()
-			g.P("var msi ", tc_go.TypeName(g, TNT_TYPENAME))
+			g.FImpExp().P("for msidx, ms := range m.", CamelCase(xfld.Name), " {")
+			g.FImpExp().In()
+			g.FImpExp().P("var msi ", tc_go.TypeName(g.FImpExp(), TNT_TYPENAME))
 
-			check_error, err := tc_gowrap.GenerateExport(g, "ms", "msi", "err")
+			check_error, err := tc_gowrap.GenerateExport(g.FImpExp(), "ms", "msi", "err")
 			if err != nil {
 				return err
 			}
 			if check_error {
-				g.GenerateErrorCheck("&" + go_alias + "." + structName + "{}")
+				g.FImpExp().GenerateErrorCheck("&" + go_alias_ie + "." + structName + "{}")
 			}
 
-			g.P("ret.", CamelCase(xfld.Name), "[msidx] = msi")
+			g.FImpExp().P("ret.", CamelCase(xfld.Name), "[msidx] = msi")
 
-			g.Out()
-			g.P("}")
+			g.FImpExp().Out()
+			g.FImpExp().P("}")
 		case *fproto.OneofFieldElement:
-			g.P("switch en := m.", CamelCase(xfld.Name), ".(type) {")
+			g.FImpExp().P("switch en := m.", CamelCase(xfld.Name), ".(type) {")
 
 			//ooscopedname := append(msgscopedname, CamelCase(xfld.Name))
 			//ooscopednamestr := CamelCaseSlice(ooscopedname)
@@ -489,27 +524,27 @@ func (g *Generator) generateMessage(message *fproto.MessageElement) error {
 					oofldscopedname := append(msgscopedname, CamelCase(xoofld.Name))
 					oofldscopednamestr := CamelCaseSlice(oofldscopedname)
 
-					g.P("case *", oofldscopednamestr, ":")
-					g.In()
+					g.FImpExp().P("case *", oofldscopednamestr, ":")
+					g.FImpExp().In()
 
-					g.P("ret.", CamelCase(xfld.Name), ", err = ", "en.Export()")
+					g.FImpExp().P("ret.", CamelCase(xfld.Name), ", err = ", "en.Export()")
 
-					g.Out()
+					g.FImpExp().Out()
 				}
 			}
 
-			g.P("}")
+			g.FImpExp().P("}")
 
-			g.GenerateErrorCheck("&" + go_alias + "." + structName + "{}")
+			g.FImpExp().GenerateErrorCheck("&" + go_alias_ie + "." + structName + "{}")
 		}
 	}
 
-	g.P("return ret, err")
+	g.FImpExp().P("return ret, err")
 
-	g.Out()
-	g.P("}")
+	g.FImpExp().Out()
+	g.FImpExp().P("}")
 
-	g.P()
+	g.FImpExp().P()
 
 	// Enums
 	for _, enum := range message.Enums {
@@ -553,19 +588,20 @@ func (g *Generator) generateEnum(enum *fproto.EnumElement) error {
 	enumName := CamelCaseSlice(enumscopedname)
 
 	// build aliases to the original type
-	go_alias := g.FileDep(nil, "", false)
+	go_alias := g.FMain().FileDep(nil, "", false)
+	//go_alias_ie := g.FImpExp().FileDep(nil, "", false)
 
 	//
 	// type MyEnum = go_package.Enum
 	//
-	if !g.GenerateComment(enum.Comment) {
-		g.GenerateCommentLine("ENUM: ", enumscopedpbnamestr)
+	if !g.FMain().GenerateComment(enum.Comment) {
+		g.FMain().GenerateCommentLine("ENUM: ", enumscopedpbnamestr)
 	}
 
-	g.P("type ", enumName, " = ", go_alias, ".", enumName)
-	g.P()
-	g.P("const (")
-	g.In()
+	g.FMain().P("type ", enumName, " = ", go_alias, ".", enumName)
+	g.FMain().P()
+	g.FMain().P("const (")
+	g.FMain().In()
 
 	for _, ec := range enum.EnumConstants {
 		// MyEnumConstant MyEnum = go_package.MyEnumConstant
@@ -578,22 +614,22 @@ func (g *Generator) generateEnum(enum *fproto.EnumElement) error {
 
 		encscopednamestr := CamelCaseSlice(encscopedname)
 
-		g.GenerateComment(ec.Comment)
+		g.FMain().GenerateComment(ec.Comment)
 
-		g.P(encscopednamestr, " ", enumName, " = ", go_alias, ".", encscopednamestr)
+		g.FMain().P(encscopednamestr, " ", enumName, " = ", go_alias, ".", encscopednamestr)
 	}
 
-	g.Out()
-	g.P(")")
-	g.P()
+	g.FMain().Out()
+	g.FMain().P(")")
+	g.FMain().P()
 
 	// var MyEnum_name = go_package.MyEnum_name
-	g.P("var ", enumName, "_name = ", go_alias, ".", enumName, "_name")
+	g.FMain().P("var ", enumName, "_name = ", go_alias, ".", enumName, "_name")
 
 	// var MyEnum_value = go_package.MyEnum_value
-	g.P("var ", enumName, "_value = ", go_alias, ".", enumName, "_value")
+	g.FMain().P("var ", enumName, "_value = ", go_alias, ".", enumName, "_value")
 
-	g.P()
+	g.FMain().P()
 
 	return nil
 }
@@ -607,7 +643,8 @@ func (g *Generator) generateOneOf(oneof *fproto.OneofFieldElement) error {
 	scopestr := CamelCaseSlice(scope)
 
 	// build aliases to the original type
-	go_alias := g.FileDep(nil, "", false)
+	//go_alias := g.FMain().FileDep(nil, "", false)
+	go_alias_ie := g.FImpExp().FileDep(nil, "", false)
 
 	ooscopedname := append(scope, CamelCase(oneof.Name))
 	//ooscopednamestr := strings.Join(ooscopedname, ".")
@@ -619,16 +656,16 @@ func (g *Generator) generateOneOf(oneof *fproto.OneofFieldElement) error {
 	//		isSTRUCT_ONEOF()
 	// }
 
-	if !g.GenerateComment(oneof.Comment) {
-		g.GenerateCommentLine("ONEOF: ", ooscopedpbnamestr)
+	if !g.FMain().GenerateComment(oneof.Comment) {
+		g.FMain().GenerateCommentLine("ONEOF: ", ooscopedpbnamestr)
 	}
 
-	g.P("type is", oneofName, " interface {")
-	g.In()
-	g.P("is", oneofName, "()")
-	g.Out()
-	g.P("}")
-	g.P()
+	g.FMain().P("type is", oneofName, " interface {")
+	g.FMain().In()
+	g.FMain().P("is", oneofName, "()")
+	g.FMain().Out()
+	g.FMain().P("}")
+	g.FMain().P()
 
 	for _, oofld := range oneof.Fields {
 		// CUSTOMIZER
@@ -653,12 +690,12 @@ func (g *Generator) generateOneOf(oneof *fproto.OneofFieldElement) error {
 
 			ooFldName := CamelCaseSlice(oofldscopedname)
 
-			if !g.GenerateComment(xoofld.Comment) {
-				g.GenerateCommentLine("ONEOF Field: ", oofldscopedpbnamestr)
+			if !g.FMain().GenerateComment(xoofld.Comment) {
+				g.FMain().GenerateCommentLine("ONEOF Field: ", oofldscopedpbnamestr)
 			}
 
-			g.P("type ", ooFldName, " struct {")
-			g.In()
+			g.FMain().P("type ", ooFldName, " struct {")
+			g.FMain().In()
 
 			// fieldname fieldtype
 			tc_gowrap, err := g.GetGowrapType(scopestr, xoofld.Type)
@@ -666,69 +703,69 @@ func (g *Generator) generateOneOf(oneof *fproto.OneofFieldElement) error {
 				return err
 			}
 
-			g.P(CamelCase(xoofld.Name), " ", tc_gowrap.TypeName(g, TNT_TYPENAME), field_tag.OutputWithSpace())
+			g.FMain().P(CamelCase(xoofld.Name), " ", tc_gowrap.TypeName(g.FMain(), TNT_TYPENAME), field_tag.OutputWithSpace())
 
-			g.Out()
-			g.P("}")
-			g.P()
+			g.FMain().Out()
+			g.FMain().P("}")
+			g.FMain().P()
 
 			// func (*STRUCT_ONEOFFIELD) isSTRUCT_ONEOF()  {}
 
-			g.P("func (*", ooFldName, ") is", oneofName, "() {}")
-			g.P()
+			g.FMain().P("func (*", ooFldName, ") is", oneofName, "() {}")
+			g.FMain().P()
 
 			//
 			// func (*STRUCT_ONEOFFIELD) Import()  {}
 			//
-			g.GenerateCommentLine("IMPORT: ", oofldscopedpbnamestr)
+			g.FImpExp().GenerateCommentLine("IMPORT: ", oofldscopedpbnamestr)
 
-			g.P("func ", ooFldName, "_Import(s *", go_alias, ".", ooFldName, ") (*", ooFldName, ", error) {")
-			g.In()
+			g.FImpExp().P("func ", ooFldName, "_Import(s *", go_alias_ie, ".", ooFldName, ") (*", ooFldName, ", error) {")
+			g.FImpExp().In()
 
-			g.P("var err error")
-			g.P("ret := &", ooFldName, "{}")
+			g.FImpExp().P("var err error")
+			g.FImpExp().P("ret := &", ooFldName, "{}")
 
 			tcoo_gowrap, err := g.GetGowrapType(scopestr, xoofld.Type)
 			if err != nil {
 				return err
 			}
 
-			check_error, err := tcoo_gowrap.GenerateImport(g, "s."+CamelCase(xoofld.Name), "ret."+CamelCase(xoofld.Name), "err")
+			check_error, err := tcoo_gowrap.GenerateImport(g.FImpExp(), "s."+CamelCase(xoofld.Name), "ret."+CamelCase(xoofld.Name), "err")
 			if err != nil {
 				return err
 			}
 			if check_error {
-				g.GenerateErrorCheck("nil")
+				g.FImpExp().GenerateErrorCheck("nil")
 			}
 
-			g.P("return ret, err")
-			g.Out()
-			g.P("}")
-			g.P()
+			g.FImpExp().P("return ret, err")
+			g.FImpExp().Out()
+			g.FImpExp().P("}")
+			g.FImpExp().P()
 
 			//
 			// func (*STRUCT_ONEOFFIELD) Export()  {}
 			//
-			g.GenerateCommentLine("EXPORT: ", oofldscopedpbnamestr)
+			g.FImpExp().GenerateCommentLine("EXPORT: ", oofldscopedpbnamestr)
 
-			g.P("func (o *", ooFldName, ") Export() (*", go_alias, ".", ooFldName, ", error) {")
-			g.In()
+			g.FImpExp().P("func (o *", ooFldName, ") Export() (*", go_alias_ie, ".", ooFldName, ", error) {")
+			g.FImpExp().In()
 
-			g.P("var err error")
-			g.P("ret := &", go_alias, ".", ooFldName, "{}")
+			g.FImpExp().P("var err error")
+			g.FImpExp().P("ret := &", go_alias_ie, ".", ooFldName, "{}")
 
-			check_error, err = tcoo_gowrap.GenerateExport(g, "o."+CamelCase(xoofld.Name), "ret."+CamelCase(xoofld.Name), "err")
+			check_error, err = tcoo_gowrap.GenerateExport(g.FImpExp(), "o."+CamelCase(xoofld.Name), "ret."+CamelCase(xoofld.Name), "err")
 			if err != nil {
 				return err
 			}
 			if check_error {
-				g.GenerateErrorCheck("nil")
+				g.FImpExp().GenerateErrorCheck("nil")
 			}
 
-			g.P("return ret, err")
-			g.Out()
-			g.P("}")
-			g.P()
+			g.FImpExp().P("return ret, err")
+			g.FImpExp().Out()
+			g.FImpExp().P("}")
+			g.FImpExp().P()
 		}
 	}
 
@@ -832,176 +869,6 @@ func (g *Generator) GetDepType(scope, fldtype string) (tp *fdep.DepType, isscala
 	return
 }
 
-// Declares a dependency and returns the alias to be used on this file.
-func (g *Generator) Dep(imp string, defalias string) string {
-	var alias string
-	var ok bool
-	if alias, ok = g.imports[imp]; ok {
-		return alias
-	}
-
-	if defalias == "" {
-		defalias = path.Base(imp)
-	}
-
-	defalias = strings.Replace(defalias, ".", "_", -1)
-
-	alias = defalias
-	aliasct := 0
-	aliasok := false
-	for !aliasok {
-		aliasok = true
-
-		for _, a := range g.imports {
-			if a == alias {
-				aliasct++
-				alias = fmt.Sprintf("%s%d", defalias, aliasct)
-				aliasok = false
-			}
-		}
-
-		if aliasok {
-			break
-		}
-	}
-
-	g.imports[imp] = alias
-	return alias
-}
-
-// Declares a dependency using a FileDep.
-func (g *Generator) FileDep(filedep *fdep.FileDep, defalias string, is_gowrap bool) string {
-	if filedep == nil {
-		filedep = g.filedep
-	}
-	var p string
-	if is_gowrap && !filedep.IsSamePackage(g.filedep) && g.IsFileGowrap(filedep) {
-		p = g.GoWrapPackage(filedep)
-	} else {
-		p = filedep.GoPackage()
-	}
-	return g.Dep(p, defalias)
-}
-
-// Returns the generated file as a string.
-func (g *Generator) Output(w io.Writer) error {
-	// write in temporary buffer
-	tmp := new(bytes.Buffer)
-
-	// Generate header and imports last, though they appear first in the output.
-	rem := g.Buffer
-	g.Buffer = new(bytes.Buffer)
-
-	g.generateHeader()
-	g.generateImports()
-
-	// write headers / imports
-	_, err := tmp.Write(g.Bytes())
-	if err != nil {
-		g.Buffer = rem
-		return err
-	}
-
-	// write previous content
-	_, err = tmp.Write(rem.Bytes())
-	if err != nil {
-		g.Buffer = rem
-		return err
-	}
-
-	// restore buffer
-	g.Buffer = rem
-
-	// Reformat generated code.
-	fset := token.NewFileSet()
-	raw := tmp.Bytes()
-	ast, err := parser.ParseFile(fset, "", tmp, parser.ParseComments)
-	if err != nil {
-		// Print out the bad code with line numbers.
-		// This should never happen in practice, but it can while changing generated code,
-		// so consider this a debugging aid.
-		var src bytes.Buffer
-		s := bufio.NewScanner(bytes.NewReader(raw))
-		for line := 1; s.Scan(); line++ {
-			fmt.Fprintf(&src, "%5d\t%s\n", line, s.Bytes())
-		}
-		return errors.New(fmt.Sprint("bad Go source code was generated:", err.Error(), "\n"+src.String()))
-	}
-
-	// write into the requested io.Writer
-	err = (&printer.Config{Mode: printer.TabIndent | printer.UseSpaces, Tabwidth: 8}).Fprint(w, fset, ast)
-	if err != nil {
-		return fmt.Errorf("generated Go source code could not be reformatted:", err.Error())
-	}
-
-	return nil
-}
-
-func (g *Generator) generateHeader() {
-	p := baseName(g.GoWrapPackage(g.filedep))
-
-	g.P("// Code generated by fproto-gowrap2. DO NOT EDIT.")
-	g.P("// source file: ", g.filedep.FilePath)
-
-	g.P("package ", p)
-	g.P()
-}
-
-func (g *Generator) generateImports() {
-	if len(g.imports) > 0 {
-		g.P("import (")
-		g.In()
-
-		// loop imports in ascending order
-		keys := make([]string, 0)
-		for k, _ := range g.imports {
-			keys = append(keys, k)
-		}
-		sort.Strings(keys)
-
-		for _, in := range keys {
-			g.P(g.imports[in], ` "`, in, `"`)
-		}
-		g.Out()
-		g.P(")")
-
-		g.P()
-	}
-}
-
-func (g *Generator) GenerateComment(comment *fproto.Comment) bool {
-	if comment != nil && len(comment.Lines) > 0 {
-		cstr := "//"
-		if comment.ExtraSlash {
-			cstr += "/"
-		}
-		for _, dl := range comment.Lines {
-			g.P(cstr, " ", strings.TrimSpace(dl))
-		}
-		return true
-	}
-	return false
-}
-
-// Generates a multi-line comment starting and ending with an empty line
-func (g *Generator) GenerateCommentLine(str ...string) {
-	if len(str) > 0 {
-		g.P("//")
-		p := []interface{}{"// "}
-		for _, s := range str {
-			p = append(p, s)
-		}
-		g.P(p...)
-		g.P("//")
-	}
-}
-
-// Returns the expected output file path and name
-func (g *Generator) Filename() string {
-	p := g.GoWrapPackage(g.filedep)
-	return path.Join(p, strings.TrimSuffix(path.Base(g.filedep.FilePath), path.Ext(g.filedep.FilePath))+".gwpb.go")
-}
-
 // Returns the wrapped package name.
 func (g *Generator) GoWrapPackage(filedep *fdep.FileDep) string {
 	if g.PkgSource != nil {
@@ -1021,57 +888,4 @@ func (g *Generator) GoWrapPackage(filedep *fdep.FileDep) string {
 		}
 	}
 	return path.Dir(filedep.FilePath)
-}
-
-// P prints the arguments to the generated output.  It handles strings and int32s, plus
-// handling indirections because they may be *string, etc.
-func (g *Generator) P(str ...interface{}) {
-	g.WriteString(g.indent)
-	for _, v := range str {
-		switch s := v.(type) {
-		case string:
-			g.WriteString(s)
-		case *string:
-			g.WriteString(*s)
-		case bool:
-			fmt.Fprintf(g, "%t", s)
-		case *bool:
-			fmt.Fprintf(g, "%t", *s)
-		case int:
-			fmt.Fprintf(g, "%d", s)
-		case *int32:
-			fmt.Fprintf(g, "%d", *s)
-		case *int64:
-			fmt.Fprintf(g, "%d", *s)
-		case float64:
-			fmt.Fprintf(g, "%g", s)
-		case *float64:
-			fmt.Fprintf(g, "%g", *s)
-		default:
-			panic(fmt.Sprintf("unknown type in printer: %T", v))
-		}
-	}
-	g.WriteByte('\n')
-}
-
-// In Indents the output one tab stop.
-func (g *Generator) In() { g.indent += "\t" }
-
-// Out unindents the output one tab stop.
-func (g *Generator) Out() {
-	if len(g.indent) > 0 {
-		g.indent = g.indent[1:]
-	}
-}
-
-func (g *Generator) GenerateErrorCheck(extraRetVal string) {
-	g.P("if err != nil {")
-	g.In()
-	if extraRetVal != "" {
-		g.P("return ", extraRetVal, ", err")
-	} else {
-		g.P("return err")
-	}
-	g.Out()
-	g.P("}")
 }
