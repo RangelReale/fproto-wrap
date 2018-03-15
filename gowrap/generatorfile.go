@@ -25,7 +25,8 @@ type GeneratorFile struct {
 	*bytes.Buffer
 	indent string
 
-	imports map[string]string
+	imports  map[string]string
+	havedata bool
 }
 
 func NewGeneratorFile(generator *Generator, fileId string, suffix string) *GeneratorFile {
@@ -35,11 +36,16 @@ func NewGeneratorFile(generator *Generator, fileId string, suffix string) *Gener
 		Suffix:    suffix,
 		Buffer:    new(bytes.Buffer),
 		imports:   make(map[string]string),
+		havedata:  false,
 	}
 }
 
 func (g *GeneratorFile) G() *Generator {
 	return g.generator
+}
+
+func (g *GeneratorFile) HaveData() bool {
+	return g.havedata
 }
 
 // Declares a dependency using a FileDep.
@@ -215,6 +221,8 @@ func (g *GeneratorFile) GenerateCommentLine(str ...string) {
 // P prints the arguments to the generated output.  It handles strings and int32s, plus
 // handling indirections because they may be *string, etc.
 func (g *GeneratorFile) P(str ...interface{}) {
+	g.havedata = true
+
 	g.WriteString(g.indent)
 	for _, v := range str {
 		switch s := v.(type) {

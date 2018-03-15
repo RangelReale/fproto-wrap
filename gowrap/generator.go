@@ -16,6 +16,12 @@ const (
 	GeneratorSyntax_Proto3
 )
 
+const (
+	FILEID_MAIN          = "main"
+	FILEID_IMPORT_EXPORT = "import_export"
+	FILEID_SERVICE       = "service"
+)
+
 // Generators generates a wrapper for a single file.
 type Generator struct {
 	//*bytes.Buffer
@@ -59,14 +65,24 @@ func NewGenerator(dep *fdep.Dep, filepath string) (*Generator, error) {
 		FilesAlias: make(map[string]string),
 	}
 
-	ret.Files["main"] = NewGeneratorFile(ret, "main", "")
+	ret.Files[FILEID_MAIN] = NewGeneratorFile(ret, "main", "")
 
 	// Alias import_export to main
-	ret.FilesAlias["import_export"] = "main"
+	ret.FilesAlias[FILEID_IMPORT_EXPORT] = FILEID_MAIN
 	// Alias service to main
-	ret.FilesAlias["service"] = "main"
+	ret.FilesAlias[FILEID_SERVICE] = FILEID_MAIN
 
 	return ret, nil
+}
+
+func (g *Generator) SetFile(fileId string, suffix string) {
+	g.Files[fileId] = NewGeneratorFile(g, fileId, suffix)
+	delete(g.FilesAlias, fileId)
+}
+
+func (g *Generator) SetFileAlias(fileId string, sourceFileId string) {
+	g.FilesAlias[fileId] = sourceFileId
+	delete(g.Files, fileId)
 }
 
 func (g *Generator) F(fileId string) *GeneratorFile {
@@ -82,19 +98,20 @@ func (g *Generator) F(fileId string) *GeneratorFile {
 		return g.F(gfa)
 	}
 
+	panic(fmt.Sprintf("Generator file id %s not found", fileId))
 	return nil
 }
 
 func (g *Generator) FMain() *GeneratorFile {
-	return g.F("main")
+	return g.F(FILEID_MAIN)
 }
 
 func (g *Generator) FImpExp() *GeneratorFile {
-	return g.F("import_export")
+	return g.F(FILEID_IMPORT_EXPORT)
 }
 
 func (g *Generator) FService() *GeneratorFile {
-	return g.F("service")
+	return g.F(FILEID_SERVICE)
 }
 
 // Gets the syntax

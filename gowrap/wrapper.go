@@ -4,6 +4,12 @@ import (
 	"github.com/RangelReale/fproto/fdep"
 )
 
+type WrapperFile struct {
+	FileId    string
+	Suffix    string
+	FileAlias string // if blank creates a new file, else alias to existing one
+}
+
 // Root wrapper struct
 type Wrapper struct {
 	dep *fdep.Dep
@@ -12,6 +18,7 @@ type Wrapper struct {
 	TypeConverters []TypeConverterPlugin
 	ServiceGen     ServiceGen
 	Customizers    []Customizer
+	Files          []*WrapperFile
 }
 
 // Creates a new wrapper
@@ -39,7 +46,7 @@ func (wp *Wrapper) GenerateFile(filename string, output FileOutput) error {
 
 	// write all files
 	for _, gf := range g.Files {
-		if gf != nil {
+		if gf != nil && gf.HaveData() {
 			err = output.Output(gf)
 			if err != nil {
 				return err
@@ -70,6 +77,13 @@ func (wp *Wrapper) Generate(output FileOutput) error {
 			g.TypeConverters = wp.TypeConverters
 			g.ServiceGen = wp.ServiceGen
 			g.Customizers = wp.Customizers
+			for _, f := range wp.Files {
+				if f.FileAlias != "" {
+					g.SetFileAlias(f.FileId, f.FileAlias)
+				} else {
+					g.SetFile(f.FileId, f.Suffix)
+				}
+			}
 
 			err = g.Generate()
 			if err != nil {
@@ -78,7 +92,7 @@ func (wp *Wrapper) Generate(output FileOutput) error {
 
 			// write all files
 			for _, gf := range g.Files {
-				if gf != nil {
+				if gf != nil && gf.HaveData() {
 					err = output.Output(gf)
 					if err != nil {
 						return err
