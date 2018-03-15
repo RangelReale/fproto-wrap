@@ -4,7 +4,7 @@ import (
 	"fmt"
 
 	"github.com/RangelReale/fproto"
-	"github.com/RangelReale/fproto-gowrap"
+	"github.com/RangelReale/fproto-wrap/gowrap"
 	"github.com/RangelReale/fproto/fdep"
 )
 
@@ -15,12 +15,12 @@ type Customizer_SQLTag struct {
 func (c *Customizer_SQLTag) GetTag(g *fproto_gowrap.Generator, currentTag *fproto_gowrap.StructTag, parentItem fproto.FProtoElement, item fproto.FProtoElement) error {
 	switch fitem := item.(type) {
 	case fproto.FieldElementTag:
-		sqlopt := fitem.FindOption("fproto_gowrap.cz.sqltag.tag_disable")
+		sqlopt := fitem.FindOption("fproto_wrap.sqltag.tag_disable")
 		if sqlopt != nil && sqlopt.Value == "true" {
 			currentTag.Set("sql", "-")
 		} else {
 			fieldname := fproto_gowrap.SnakeCase(fitem.FieldName())
-			fnopt := fitem.FindOption("fproto_gowrap.cz.sqltag.tag_fieldname")
+			fnopt := fitem.FindOption("fproto_wrap.sqltag.tag_fieldname")
 			if fnopt != nil && fnopt.Value != "" {
 				fieldname = fnopt.Value
 			}

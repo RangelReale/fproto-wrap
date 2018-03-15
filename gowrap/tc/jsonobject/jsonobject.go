@@ -1,7 +1,7 @@
 package jsonobject
 
 import (
-	"github.com/RangelReale/fproto-gowrap"
+	"github.com/RangelReale/fproto-wrap/gowrap"
 	"github.com/RangelReale/fproto/fdep"
 )
 
@@ -14,8 +14,8 @@ type TypeConverterPlugin_JSONObject struct {
 }
 
 func (t *TypeConverterPlugin_JSONObject) GetTypeConverter(tp *fdep.DepType) fproto_gowrap.TypeConverter {
-	if tp.FileDep.FilePath == "github.com/RangelReale/fproto-gowrap/tc/jsonobject/jsonobject.proto" &&
-		tp.FileDep.ProtoFile.PackageName == "fproto_gowrap.tc.jsonobject" &&
+	if tp.FileDep.FilePath == "github.com/RangelReale/fproto-wrap/jsonobject.proto" &&
+		tp.FileDep.ProtoFile.PackageName == "fproto_wrap" &&
 		tp.Name == "JSONObject" {
 		return &TypeConverter_JSONObject{}
 	}
@@ -61,7 +61,7 @@ func (t *TypeConverter_JSONObject) GenerateImport(g *fproto_gowrap.Generator, va
 func (t *TypeConverter_JSONObject) GenerateExport(g *fproto_gowrap.Generator, varSrc string, varDest string, varError string) (checkError bool, err error) {
 	alias := g.Dep("encoding/json", "json")
 
-	tc_go, err := g.GetGoType("", "fproto_gowrap.tc.jsonobject.JSONObject")
+	tc_go, err := g.GetGoType("", "fproto_wrap.JSONObject")
 	if err != nil {
 		return false, err
 	}

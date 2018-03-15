@@ -3,7 +3,7 @@ package duration
 import (
 	"fmt"
 
-	"github.com/RangelReale/fproto-gowrap"
+	"github.com/RangelReale/fproto-wrap/gowrap"
 	"github.com/RangelReale/fproto/fdep"
 )
 

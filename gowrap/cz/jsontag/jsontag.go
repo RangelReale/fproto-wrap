@@ -4,7 +4,7 @@ import (
 	"fmt"
 
 	"github.com/RangelReale/fproto"
-	"github.com/RangelReale/fproto-gowrap"
+	"github.com/RangelReale/fproto-wrap/gowrap"
 	"github.com/RangelReale/fproto/fdep"
 )
 
@@ -15,12 +15,12 @@ type Customizer_JSONTag struct {
 func (c *Customizer_JSONTag) GetTag(g *fproto_gowrap.Generator, currentTag *fproto_gowrap.StructTag, parentItem fproto.FProtoElement, item fproto.FProtoElement) error {
 	switch fitem := item.(type) {
 	case fproto.FieldElementTag:
-		jsonopt := fitem.FindOption("fproto_gowrap.cz.jsontag.tag_disable")
+		jsonopt := fitem.FindOption("fproto_wrap.jsontag.tag_disable")
 		if jsonopt != nil && jsonopt.Value == "true" {
 			currentTag.Set("json", "-")
 		} else {
 			fieldname := fproto_gowrap.SnakeCase(fitem.FieldName())
-			fnopt := fitem.FindOption("fproto_gowrap.cz.jsontag.tag_fieldname")
+			fnopt := fitem.FindOption("fproto_wrap.jsontag.tag_fieldname")
 			if fnopt != nil && fnopt.Value != "" {
 				fieldname = fnopt.Value
 			}

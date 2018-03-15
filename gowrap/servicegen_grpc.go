@@ -26,7 +26,7 @@ func (s *ServiceGen_gRPC) GenerateService(g *Generator, svc *fproto.ServiceEleme
 	ctx_alias := g.Dep("golang.org/x/net/context", "context")
 	grpc_alias := g.Dep("google.golang.org/grpc", "grpc")
 	var util_alias string
-	util_alias = g.Dep("github.com/RangelReale/fproto-gowrap/util", "fproto_gowrap_util")
+	util_alias = g.Dep("github.com/RangelReale/fproto-wrap/gowrap/util", "fproto_gowrap_util")
 	func_alias := g.FileDep(nil, "", false)
 
 	svcName := CamelCase(svc.Name)

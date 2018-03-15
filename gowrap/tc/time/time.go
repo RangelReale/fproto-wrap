@@ -3,7 +3,7 @@ package time
 import (
 	"fmt"
 
-	"github.com/RangelReale/fproto-gowrap"
+	"github.com/RangelReale/fproto-wrap/gowrap"
 	"github.com/RangelReale/fproto/fdep"
 )
 
@@ -17,8 +17,8 @@ func (t *TypeConverterPlugin_Time) GetTypeConverter(tp *fdep.DepType) fproto_gow
 		tp.Name == "Timestamp" {
 		return &TypeConverter_Time{}
 	}
-	if tp.FileDep.FilePath == "github.com/RangelReale/fproto-gowrap/tc/time/time.proto" &&
-		tp.FileDep.ProtoFile.PackageName == "fproto_gowrap.tc.time" &&
+	if tp.FileDep.FilePath == "github.com/RangelReale/fproto-wrap/time.proto" &&
+		tp.FileDep.ProtoFile.PackageName == "fproto_wrap" &&
 		tp.Name == "NullTime" {
 		return &TypeConverter_NullTime{}
 	}
@@ -63,7 +63,7 @@ type TypeConverter_NullTime struct {
 }
 
 func (t *TypeConverter_NullTime) TypeName(g *fproto_gowrap.Generator, tntype fproto_gowrap.TypeConverterTypeNameType) string {
-	alias := g.Dep("github.com/RangelReale/fproto-gowrap/tc/time/ptypes", "time_ptypes")
+	alias := g.Dep("github.com/RangelReale/fproto-wrap/gowrap/tc/time/ptypes", "time_ptypes")
 	return fmt.Sprintf("%s.%s", alias, "NullTime")
 }
 
@@ -73,7 +73,7 @@ func (t *TypeConverter_NullTime) IsPointer() bool {
 
 func (t *TypeConverter_NullTime) GenerateImport(g *fproto_gowrap.Generator, varSrc string, varDest string, varError string) (checkError bool, err error) {
 	pb_alias := g.Dep("github.com/golang/protobuf/ptypes", "pb_types")
-	alias := g.Dep("github.com/RangelReale/fproto-gowrap/tc/time/ptypes", "time_ptypes")
+	alias := g.Dep("github.com/RangelReale/fproto-wrap/gowrap/tc/time/ptypes", "time_ptypes")
 
 	g.P("if ", varSrc, " != nil {")
 	g.In()
@@ -96,7 +96,7 @@ func (t *TypeConverter_NullTime) GenerateImport(g *fproto_gowrap.Generator, varS
 
 func (t *TypeConverter_NullTime) GenerateExport(g *fproto_gowrap.Generator, varSrc string, varDest string, varError string) (checkError bool, err error) {
 	pb_alias := g.Dep("github.com/golang/protobuf/ptypes", "pb_types")
-	alias := g.Dep("github.com/RangelReale/fproto-gowrap/tc/time", "time")
+	alias := g.Dep("github.com/RangelReale/fproto-wrap/gowrap/gwproto", "time")
 
 	g.P("if ", varSrc, ".Valid {")
 	g.In()

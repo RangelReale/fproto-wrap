@@ -84,7 +84,7 @@ func (g *Generator) IsFileGowrap(filedep *fdep.FileDep) bool {
 		return false
 	}
 
-	if o := filedep.ProtoFile.FindOption("fproto_gowrap.wrap"); o != nil {
+	if o := filedep.ProtoFile.FindOption("fproto_wrap.wrap"); o != nil {
 		if o.Value != "true" {
 			return false
 		}

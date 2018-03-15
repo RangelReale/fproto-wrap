@@ -3,26 +3,26 @@ package uuid
 import (
 	"fmt"
 
-	"github.com/RangelReale/fproto-gowrap"
+	"github.com/RangelReale/fproto-wrap/gowrap"
 	"github.com/RangelReale/fproto/fdep"
 )
 
 //
 // UUID
-// Converts between fproto_gowrap.tc.uuid.UUID and github.com/RangelReale/go.uuid UUID
+// Converts between fproto_wrap.UUID and github.com/RangelReale/go.uuid UUID
 //
 
 type TypeConverterPlugin_UUID struct {
 }
 
 func (t *TypeConverterPlugin_UUID) GetTypeConverter(tp *fdep.DepType) fproto_gowrap.TypeConverter {
-	if tp.FileDep.FilePath == "github.com/RangelReale/fproto-gowrap/tc/uuid/uuid.proto" &&
-		tp.FileDep.ProtoFile.PackageName == "fproto_gowrap.tc.uuid" &&
+	if tp.FileDep.FilePath == "github.com/RangelReale/fproto-wrap/uuid.proto" &&
+		tp.FileDep.ProtoFile.PackageName == "fproto_wrap" &&
 		tp.Name == "UUID" {
 		return &TypeConverter_UUID{}
 	}
-	if tp.FileDep.FilePath == "github.com/RangelReale/fproto-gowrap/tc/uuid/uuid.proto" &&
-		tp.FileDep.ProtoFile.PackageName == "fproto_gowrap.tc.uuid" &&
+	if tp.FileDep.FilePath == "github.com/RangelReale/fproto-wrap/uuid.proto" &&
+		tp.FileDep.ProtoFile.PackageName == "fproto_wrap" &&
 		tp.Name == "NullUUID" {
 		return &TypeConverter_NullUUID{}
 	}
@@ -31,7 +31,7 @@ func (t *TypeConverterPlugin_UUID) GetTypeConverter(tp *fdep.DepType) fproto_gow
 
 //
 // UUID
-// Converts between fproto_gowrap.tc.uuid.UUID and github.com/RangelReale/go.uuid UUID
+// Converts between fproto_wrap.UUID and github.com/RangelReale/go.uuid UUID
 //
 
 type TypeConverter_UUID struct {
@@ -65,7 +65,7 @@ func (t *TypeConverter_UUID) GenerateImport(g *fproto_gowrap.Generator, varSrc s
 }
 
 func (t *TypeConverter_UUID) GenerateExport(g *fproto_gowrap.Generator, varSrc string, varDest string, varError string) (checkError bool, err error) {
-	tc_go, err := g.GetGoType("", "fproto_gowrap.tc.uuid.UUID")
+	tc_go, err := g.GetGoType("", "fproto_wrap.UUID")
 	if err != nil {
 		return false, err
 	}
@@ -122,7 +122,7 @@ func (t *TypeConverter_NullUUID) GenerateImport(g *fproto_gowrap.Generator, varS
 }
 
 func (t *TypeConverter_NullUUID) GenerateExport(g *fproto_gowrap.Generator, varSrc string, varDest string, varError string) (checkError bool, err error) {
-	tc_go, err := g.GetGoType("", "fproto_gowrap.tc.uuid.NullUUID")
+	tc_go, err := g.GetGoType("", "fproto_wrap.NullUUID")
 	if err != nil {
 		return false, err
 	}
