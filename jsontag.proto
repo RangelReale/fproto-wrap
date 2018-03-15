@@ -1,0 +1,10 @@
+syntax = "proto3";
+package fproto_wrap;
+option go_package = "github.com/RangelReale/fproto-wrap/gowrap/proto";
+
+import "google/protobuf/descriptor.proto";
+
+extend google.protobuf.FieldOptions {
+    bool tag_disable = 6700;
+    string tag_fieldname = 6701;
+}
