@@ -809,11 +809,11 @@ func (g *Generator) getTypeConv(tp *fdep.DepType) TypeConverter {
 
 // Get gowrap type
 func (g *Generator) GetGowrapType(scope, fldtype string) (TypeConverter, error) {
-	tp, isscalar, err := g.GetDepType(scope, fldtype)
+	tp, err := g.GetDepType(scope, fldtype)
 	if err != nil {
 		return nil, err
 	}
-	if isscalar {
+	if tp.IsScalar() {
 		return &TypeConverter_Scalar{tp, fldtype}, nil
 	} else {
 		if tc := g.getTypeConv(tp); tc != nil {
@@ -825,11 +825,11 @@ func (g *Generator) GetGowrapType(scope, fldtype string) (TypeConverter, error) 
 
 // Get go type
 func (g *Generator) GetGoType(scope, fldtype string) (TypeConverter, error) {
-	tp, isscalar, err := g.GetDepType(scope, fldtype)
+	tp, err := g.GetDepType(scope, fldtype)
 	if err != nil {
 		return nil, err
 	}
-	if isscalar {
+	if tp.IsScalar() {
 		return &TypeConverter_Scalar{tp, fldtype}, nil
 	} else {
 		return &TypeConverter_Default{g, tp, g.filedep, false}, nil
@@ -851,44 +851,36 @@ func (g *Generator) GetBothTypes(scope, fldtype string) (tc_gowrap TypeConverter
 }
 
 // Get dependent type
-func (g *Generator) GetDepType(scope, fldtype string) (tp *fdep.DepType, isscalar bool, err error) {
-	// check if if scalar
-	if scalar, ok := fproto.ParseScalarType(fldtype); ok {
-		tp = g.dep.GetScalarType(scalar)
-		isscalar = true
-	} else {
-		isscalar = false
-		var err error
+func (g *Generator) GetDepType(scope, fldtype string) (tp *fdep.DepType, err error) {
+	// search scope recursivelly, starting from the name itself
+	// example: GetDepType("google.protobuf", "Timestamp")
+	//		search: Timestamp
+	//		search: google.protobuf.Timestamp
+	//		search: google.Timestamp
+	sclist := []string{""} // first item is blank, so the name itself is searched first
+	if len(scope) > 0 {
+		sclist = append(sclist, strings.Split(scope, ".")...)
+	}
 
-		// search scope recursivelly, starting from the name itself
-		// example: GetDepType("google.protobuf", "Timestamp")
-		//		search: google.protobuf.Timestamp
-		//		search: google.Timestamp
-		sclist := []string{""} // first item is blank, so the name itself is searched first
-		if len(scope) > 0 {
-			sclist = append(sclist, strings.Split(scope, ".")...)
+	for sci := 0; sci < len(sclist); sci++ {
+		var ffname string
+		if sci == 0 {
+			ffname = fldtype
+		} else {
+			ffname = strings.Join(sclist[1:sci+1], ".") + "." + fldtype
 		}
 
-		for sci := 0; sci < len(sclist); sci++ {
-			var ffname string
-			if sci == 0 {
-				ffname = fldtype
-			} else {
-				ffname = strings.Join(sclist[1:sci+1], ".") + "." + fldtype
-			}
-
-			tp, err = g.filedep.GetType(ffname)
-			if err != nil {
-				return nil, false, err
-			}
-			if tp != nil {
-				break
-			}
+		tp, err = g.filedep.GetType(ffname)
+		if err != nil {
+			return nil, err
+		}
+		if tp != nil {
+			break
 		}
 	}
 
-	if !isscalar && tp == nil {
-		return nil, false, fmt.Errorf("Unable to find dependent type '%s' on scope '%s' in file '%s'", fldtype, scope, g.filedep.FilePath)
+	if tp == nil {
+		return nil, fmt.Errorf("Unable to find dependent type '%s' on scope '%s' in file '%s'", fldtype, scope, g.filedep.FilePath)
 	}
 
 	return
