@@ -17,6 +17,7 @@ import (
 	"github.com/RangelReale/fproto/fdep"
 )
 
+// A single generated output file
 type GeneratorFile struct {
 	generator *Generator
 	FileId    string
@@ -29,6 +30,7 @@ type GeneratorFile struct {
 	havedata bool
 }
 
+// Creates a new generator file
 func NewGeneratorFile(generator *Generator, fileId string, suffix string) *GeneratorFile {
 	return &GeneratorFile{
 		generator: generator,
@@ -40,10 +42,12 @@ func NewGeneratorFile(generator *Generator, fileId string, suffix string) *Gener
 	}
 }
 
+// Returns the parent generator
 func (g *GeneratorFile) G() *Generator {
 	return g.generator
 }
 
+// Checks if any data was written on this file
 func (g *GeneratorFile) HaveData() bool {
 	return g.havedata
 }

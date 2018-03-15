@@ -16,23 +16,21 @@ const (
 	GeneratorSyntax_Proto3
 )
 
+// Output file id
 const (
 	FILEID_MAIN          = "main"
 	FILEID_IMPORT_EXPORT = "import_export"
 	FILEID_SERVICE       = "service"
 )
 
-// Generators generates a wrapper for a single file.
+// Generators generates a wrapper for a single source file.
+// There can be more than one output files.
 type Generator struct {
-	//*bytes.Buffer
-	//indent string
-
 	dep        *fdep.Dep
 	filedep    *fdep.FileDep
 	tc_default TypeConverter
 
-	//imports map[string]string
-
+	// Files to output
 	Files      map[string]*GeneratorFile
 	FilesAlias map[string]string
 
@@ -57,14 +55,13 @@ func NewGenerator(dep *fdep.Dep, filepath string) (*Generator, error) {
 	}
 
 	ret := &Generator{
-		//Buffer:  new(bytes.Buffer),
-		dep:     dep,
-		filedep: filedep,
-		//imports: make(map[string]string),
+		dep:        dep,
+		filedep:    filedep,
 		Files:      make(map[string]*GeneratorFile),
 		FilesAlias: make(map[string]string),
 	}
 
+	// Creates the main file
 	ret.Files[FILEID_MAIN] = NewGeneratorFile(ret, "main", "")
 
 	// Alias import_export to main
@@ -75,16 +72,19 @@ func NewGenerator(dep *fdep.Dep, filepath string) (*Generator, error) {
 	return ret, nil
 }
 
+// Creates a new file
 func (g *Generator) SetFile(fileId string, suffix string) {
 	g.Files[fileId] = NewGeneratorFile(g, fileId, suffix)
 	delete(g.FilesAlias, fileId)
 }
 
+// Sets one file as alias of another
 func (g *Generator) SetFileAlias(fileId string, sourceFileId string) {
 	g.FilesAlias[fileId] = sourceFileId
 	delete(g.Files, fileId)
 }
 
+// Gets a file by id
 func (g *Generator) F(fileId string) *GeneratorFile {
 	if gf, ok := g.Files[fileId]; ok {
 		return gf
@@ -102,14 +102,17 @@ func (g *Generator) F(fileId string) *GeneratorFile {
 	return nil
 }
 
+// Helper to get the MAIN file
 func (g *Generator) FMain() *GeneratorFile {
 	return g.F(FILEID_MAIN)
 }
 
+// Helper to get the IMPORT_EXPORT file
 func (g *Generator) FImpExp() *GeneratorFile {
 	return g.F(FILEID_IMPORT_EXPORT)
 }
 
+// Helper to get the SERVICE file
 func (g *Generator) FService() *GeneratorFile {
 	return g.F(FILEID_SERVICE)
 }
@@ -130,6 +133,7 @@ func (g *Generator) GetFileDep() *fdep.FileDep {
 	return g.filedep
 }
 
+// Check if the file should be wrapped (the file option fproto_wrap.wrap=false disables it)
 func (g *Generator) IsFileGowrap(filedep *fdep.FileDep) bool {
 	if filedep.DepType != fdep.DepType_Own {
 		return false
