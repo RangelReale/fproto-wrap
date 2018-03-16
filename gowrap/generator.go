@@ -287,12 +287,6 @@ func (g *Generator) BuildFieldName(field fproto.FieldElementTag) (goName string,
 	return
 }
 
-// Helper as this is frequently used
-func (g *Generator) BuildFieldGoName(field fproto.FieldElementTag) string {
-	ret, _ := g.BuildFieldName(field)
-	return ret
-}
-
 // Generates a message
 func (g *Generator) generateMessage(message *fproto.MessageElement) error {
 	if message.IsExtend {
@@ -327,6 +321,8 @@ func (g *Generator) generateMessage(message *fproto.MessageElement) error {
 			return err
 		}
 
+		fldGoName, _ := g.BuildFieldName(fld)
+
 		switch xfld := fld.(type) {
 		case *fproto.FieldElement:
 			// fieldname fieldtype
@@ -345,7 +341,7 @@ func (g *Generator) generateMessage(message *fproto.MessageElement) error {
 				tctn = TNT_TYPENAME
 			}
 
-			g.FMain().P(g.BuildFieldGoName(xfld), " ", type_prefix, tc_gowrap.TypeName(g.FMain(), tctn), field_tag.OutputWithSpace())
+			g.FMain().P(fldGoName, " ", type_prefix, tc_gowrap.TypeName(g.FMain(), tctn), field_tag.OutputWithSpace())
 		case *fproto.MapFieldElement:
 			// fieldname map[keytype]fieldtype
 			g.FMain().GenerateComment(xfld.Comment)
@@ -359,14 +355,14 @@ func (g *Generator) generateMessage(message *fproto.MessageElement) error {
 				return err
 			}
 
-			g.FMain().P(g.BuildFieldGoName(xfld), " map[", keytc_gowrap.TypeName(g.FMain(), TNT_TYPENAME), "]", tc_gowrap.TypeName(g.FMain(), TNT_TYPENAME), field_tag.OutputWithSpace())
+			g.FMain().P(fldGoName, " map[", keytc_gowrap.TypeName(g.FMain(), TNT_TYPENAME), "]", tc_gowrap.TypeName(g.FMain(), TNT_TYPENAME), field_tag.OutputWithSpace())
 		case *fproto.OneofFieldElement:
 			// fieldname isSTRUCT_ONEOF
 			g.FMain().GenerateComment(xfld.Comment)
 
 			oneofGoName, _, _ := g.BuildOneOfName(xfld)
 
-			g.FMain().P(g.BuildFieldGoName(xfld), " ", oneofGoName, field_tag.OutputWithSpace())
+			g.FMain().P(fldGoName, " ", oneofGoName, field_tag.OutputWithSpace())
 		}
 	}
 
@@ -395,7 +391,7 @@ func (g *Generator) generateMessage(message *fproto.MessageElement) error {
 	for _, fld := range message.Fields {
 		fldGoName, fldProtoName := g.BuildFieldName(fld)
 
-		g.FImpExp().P("// ", fldProtoName)
+		g.FImpExp().P("// ", msgProtoName, ".", fldProtoName)
 
 		switch xfld := fld.(type) {
 		case *fproto.FieldElement:
@@ -503,9 +499,10 @@ func (g *Generator) generateMessage(message *fproto.MessageElement) error {
 	g.FImpExp().P("ret := &", go_alias_ie, ".", msgGoName, "{}")
 
 	for _, fld := range message.Fields {
-		fieldGoName, fieldProtoName := g.BuildFieldName(fld)
+		fldGoName, fldProtoName := g.BuildFieldName(fld)
 
-		g.FImpExp().P("// ", fieldProtoName)
+		g.FImpExp().P("// ", msgProtoName, ".", fldProtoName)
+
 		switch xfld := fld.(type) {
 		case *fproto.FieldElement:
 			// fieldname = go_package.fieldname
@@ -515,10 +512,10 @@ func (g *Generator) generateMessage(message *fproto.MessageElement) error {
 				return err
 			}
 
-			source_field := "m." + fieldGoName
-			dest_field := "ret." + fieldGoName
+			source_field := "m." + fldGoName
+			dest_field := "ret." + fldGoName
 			if xfld.Repeated {
-				g.FImpExp().P("for _, ms := range m.", fieldGoName, " {")
+				g.FImpExp().P("for _, ms := range m.", fldGoName, " {")
 				g.FImpExp().In()
 				g.FImpExp().P("var msi ", tc_go.TypeName(g.FImpExp(), TNT_TYPENAME))
 
@@ -535,7 +532,7 @@ func (g *Generator) generateMessage(message *fproto.MessageElement) error {
 			}
 
 			if xfld.Repeated {
-				g.FImpExp().P("ret.", fieldGoName, " = append(ret.", fieldGoName, ", msi)")
+				g.FImpExp().P("ret.", fldGoName, " = append(ret.", fldGoName, ", msi)")
 
 				g.FImpExp().Out()
 				g.FImpExp().P("}")
@@ -549,7 +546,7 @@ func (g *Generator) generateMessage(message *fproto.MessageElement) error {
 				return err
 			}
 
-			g.FImpExp().P("for msidx, ms := range m.", fieldGoName, " {")
+			g.FImpExp().P("for msidx, ms := range m.", fldGoName, " {")
 			g.FImpExp().In()
 			g.FImpExp().P("var msi ", tc_go.TypeName(g.FImpExp(), TNT_TYPENAME))
 
@@ -561,12 +558,12 @@ func (g *Generator) generateMessage(message *fproto.MessageElement) error {
 				g.FImpExp().GenerateErrorCheck("&" + go_alias_ie + "." + msgGoName + "{}")
 			}
 
-			g.FImpExp().P("ret.", fieldGoName, "[msidx] = msi")
+			g.FImpExp().P("ret.", fldGoName, "[msidx] = msi")
 
 			g.FImpExp().Out()
 			g.FImpExp().P("}")
 		case *fproto.OneofFieldElement:
-			g.FImpExp().P("switch en := m.", fieldGoName, ".(type) {")
+			g.FImpExp().P("switch en := m.", fldGoName, ".(type) {")
 
 			for _, oofld := range xfld.Fields {
 				switch xoofld := oofld.(type) {
@@ -576,7 +573,7 @@ func (g *Generator) generateMessage(message *fproto.MessageElement) error {
 					g.FImpExp().P("case *", oneofFieldGoName, ":")
 					g.FImpExp().In()
 
-					g.FImpExp().P("ret.", fieldGoName, ", err = ", "en.Export()")
+					g.FImpExp().P("ret.", fldGoName, ", err = ", "en.Export()")
 
 					g.FImpExp().Out()
 				}
@@ -658,7 +655,7 @@ func (g *Generator) BuildEnumConstantName(ec *fproto.EnumConstantElement) (goNam
 }
 
 func (g *Generator) generateEnum(enum *fproto.EnumElement) error {
-	goName, protoName, _ := g.BuildEnumName(enum)
+	enGoName, enProtoName, _ := g.BuildEnumName(enum)
 
 	// build aliases to the original type
 	go_alias := g.FMain().FileDep(nil, "", false)
@@ -667,10 +664,10 @@ func (g *Generator) generateEnum(enum *fproto.EnumElement) error {
 	// type MyEnum = go_package.Enum
 	//
 	if !g.FMain().GenerateComment(enum.Comment) {
-		g.FMain().GenerateCommentLine("ENUM: ", protoName)
+		g.FMain().GenerateCommentLine("ENUM: ", enProtoName)
 	}
 
-	g.FMain().P("type ", goName, " = ", go_alias, ".", goName)
+	g.FMain().P("type ", enGoName, " = ", go_alias, ".", enGoName)
 	g.FMain().P()
 	g.FMain().P("const (")
 	g.FMain().In()
@@ -681,7 +678,7 @@ func (g *Generator) generateEnum(enum *fproto.EnumElement) error {
 
 		g.FMain().GenerateComment(ec.Comment)
 
-		g.FMain().P(ecGoName, " ", goName, " = ", go_alias, ".", ecGoName)
+		g.FMain().P(ecGoName, " ", enGoName, " = ", go_alias, ".", ecGoName)
 	}
 
 	g.FMain().Out()
@@ -689,10 +686,10 @@ func (g *Generator) generateEnum(enum *fproto.EnumElement) error {
 	g.FMain().P()
 
 	// var MyEnum_name = go_package.MyEnum_name
-	g.FMain().P("var ", goName, "_name = ", go_alias, ".", goName, "_name")
+	g.FMain().P("var ", enGoName, "_name = ", go_alias, ".", enGoName, "_name")
 
 	// var MyEnum_value = go_package.MyEnum_value
-	g.FMain().P("var ", goName, "_value = ", go_alias, ".", goName, "_value")
+	g.FMain().P("var ", enGoName, "_value = ", go_alias, ".", enGoName, "_value")
 
 	g.FMain().P()
 
@@ -731,19 +728,19 @@ func (g *Generator) generateOneOf(oneof *fproto.OneofFieldElement) error {
 	// build aliases to the original type
 	go_alias_ie := g.FImpExp().FileDep(nil, "", false)
 
-	goName, protoName, _ := g.BuildOneOfName(oneof)
+	ooGoName, ooProtoName, _ := g.BuildOneOfName(oneof)
 
 	// type isSTRUCT_ONEOF interface {
 	//		isSTRUCT_ONEOF()
 	// }
 
 	if !g.FMain().GenerateComment(oneof.Comment) {
-		g.FMain().GenerateCommentLine("ONEOF: ", protoName)
+		g.FMain().GenerateCommentLine("ONEOF: ", ooProtoName)
 	}
 
-	g.FMain().P("type ", goName, " interface {")
+	g.FMain().P("type ", ooGoName, " interface {")
 	g.FMain().In()
-	g.FMain().P(goName, "()")
+	g.FMain().P(ooGoName, "()")
 	g.FMain().Out()
 	g.FMain().P("}")
 	g.FMain().P()
@@ -757,7 +754,7 @@ func (g *Generator) generateOneOf(oneof *fproto.OneofFieldElement) error {
 			return err
 		}
 
-		fieldGoName, _ := g.BuildFieldName(oofld)
+		fldGoName, _ := g.BuildFieldName(oofld)
 
 		switch xoofld := oofld.(type) {
 		case *fproto.FieldElement:
@@ -776,7 +773,7 @@ func (g *Generator) generateOneOf(oneof *fproto.OneofFieldElement) error {
 				return err
 			}
 
-			g.FMain().P(fieldGoName, " ", tc_gowrap.TypeName(g.FMain(), TNT_TYPENAME), field_tag.OutputWithSpace())
+			g.FMain().P(fldGoName, " ", tc_gowrap.TypeName(g.FMain(), TNT_TYPENAME), field_tag.OutputWithSpace())
 
 			g.FMain().Out()
 			g.FMain().P("}")
@@ -784,7 +781,7 @@ func (g *Generator) generateOneOf(oneof *fproto.OneofFieldElement) error {
 
 			// func (*STRUCT_ONEOFFIELD) isSTRUCT_ONEOF()  {}
 
-			g.FMain().P("func (*", oneofFieldGoName, ") ", goName, "() {}")
+			g.FMain().P("func (*", oneofFieldGoName, ") ", ooGoName, "() {}")
 			g.FMain().P()
 
 			//
@@ -803,7 +800,7 @@ func (g *Generator) generateOneOf(oneof *fproto.OneofFieldElement) error {
 				return err
 			}
 
-			check_error, err := tcoo_gowrap.GenerateImport(g.FImpExp(), "s."+fieldGoName, "ret."+fieldGoName, "err")
+			check_error, err := tcoo_gowrap.GenerateImport(g.FImpExp(), "s."+fldGoName, "ret."+fldGoName, "err")
 			if err != nil {
 				return err
 			}
@@ -827,7 +824,7 @@ func (g *Generator) generateOneOf(oneof *fproto.OneofFieldElement) error {
 			g.FImpExp().P("var err error")
 			g.FImpExp().P("ret := &", go_alias_ie, ".", oneofFieldGoName, "{}")
 
-			check_error, err = tcoo_gowrap.GenerateExport(g.FImpExp(), "o."+fieldGoName, "ret."+fieldGoName, "err")
+			check_error, err = tcoo_gowrap.GenerateExport(g.FImpExp(), "o."+fldGoName, "ret."+fldGoName, "err")
 			if err != nil {
 				return err
 			}
