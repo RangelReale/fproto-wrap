@@ -629,8 +629,7 @@ func (g *Generator) BuildEnumName(enum *fproto.EnumElement) (goName string, prot
 	// Get the enum scope on the current file as an array
 	scope := g.GetScope(enum)
 
-	// enums don't have "_" at last part
-	goName = CamelCaseSlice(scope) + CamelCase(enum.Name)
+	goName = CamelCaseSlice(append(scope, CamelCase(enum.Name)))
 	protoName = strings.Join(append(scope, enum.Name), ".")
 	protoScope = strings.Join(scope, ".")
 
