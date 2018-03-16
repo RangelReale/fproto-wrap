@@ -74,6 +74,11 @@ func CamelCase(s string) string {
 // be joined with "_".
 func CamelCaseSlice(elem []string) string { return CamelCase(strings.Join(elem, "_")) }
 
+// CamelCaseProto is like CamelCase, but the argument is a protobuf type (dot separated).
+func CamelCaseProto(s string) string {
+	return CamelCaseSlice(strings.Split(s, "."))
+}
+
 // baseName returns the last path element of the name, with the last dotted suffix removed.
 func baseName(name string) string {
 	// First, find the last element

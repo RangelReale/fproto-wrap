@@ -2,7 +2,6 @@ package fproto_gowrap
 
 import (
 	"fmt"
-	"strings"
 
 	"github.com/RangelReale/fproto"
 	"github.com/RangelReale/fproto/fdep"
@@ -38,12 +37,14 @@ func (t *TypeConverter_Default) TypeName(g *GeneratorFile, tntype TypeConverterT
 		}
 	}
 
+	// get Go type name
+	goTypeName, _, _ := g.G().BuildTypeName(t.tp)
+
 	if t.is_gowrap && t.tp.FileDep.IsSamePackage(t.filedep) {
-		//_ = g.FileDep(tp.FileDep, tp.Alias)
-		ret += fmt.Sprintf("%s", strings.Replace(t.tp.Name, ".", "_", -1))
+		ret += fmt.Sprintf("%s", goTypeName)
 	} else {
 		falias := g.FileDep(t.tp.FileDep, t.tp.Alias, t.is_gowrap)
-		ret += fmt.Sprintf("%s.%s", falias, strings.Replace(t.tp.Name, ".", "_", -1))
+		ret += fmt.Sprintf("%s.%s", falias, goTypeName)
 	}
 
 	switch tntype {
@@ -77,8 +78,11 @@ func (t *TypeConverter_Default) GenerateImport(g *GeneratorFile, varSrc string, 
 		return false, nil
 	}
 
-	// varDest, err = MyStruct_Import(varSrc)
-	g.P(varDest, ", err = ", falias, strings.Replace(t.tp.Name, ".", "_", -1), "_Import(", varSrc, ")")
+	// get Go type name
+	goTypeName, _, _ := g.G().BuildTypeName(t.tp)
+
+	// varDest, err = goalias.MyStruct_Import(varSrc)
+	g.P(varDest, ", err = ", falias, goTypeName, "_Import(", varSrc, ")")
 
 	return true, nil
 }

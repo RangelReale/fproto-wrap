@@ -5,7 +5,6 @@ import (
 
 	"github.com/RangelReale/fproto"
 	"github.com/RangelReale/fproto-wrap/gowrap"
-	"github.com/RangelReale/fproto/fdep"
 )
 
 // Adds a json tag to all struct fields, using snake case formatting
@@ -30,10 +29,10 @@ func (c *Customizer_JSONTag) GetTag(g *fproto_gowrap.Generator, currentTag *fpro
 	return nil
 }
 
-func (c *Customizer_JSONTag) GenerateCode(g *fproto_gowrap.Generator, dep *fdep.Dep, filedep *fdep.FileDep) error {
+func (c *Customizer_JSONTag) GenerateCode(g *fproto_gowrap.Generator) error {
 	return nil
 }
 
-func (c *Customizer_JSONTag) GenerateServiceCode(g *fproto_gowrap.Generator, dep *fdep.Dep, filedep *fdep.FileDep) error {
+func (c *Customizer_JSONTag) GenerateServiceCode(g *fproto_gowrap.Generator) error {
 	return nil
 }

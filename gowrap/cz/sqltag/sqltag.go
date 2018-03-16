@@ -5,7 +5,6 @@ import (
 
 	"github.com/RangelReale/fproto"
 	"github.com/RangelReale/fproto-wrap/gowrap"
-	"github.com/RangelReale/fproto/fdep"
 )
 
 // Adds a sql tag to all struct fields, using snake case formatting
@@ -30,10 +29,10 @@ func (c *Customizer_SQLTag) GetTag(g *fproto_gowrap.Generator, currentTag *fprot
 	return nil
 }
 
-func (c *Customizer_SQLTag) GenerateCode(g *fproto_gowrap.Generator, dep *fdep.Dep, filedep *fdep.FileDep) error {
+func (c *Customizer_SQLTag) GenerateCode(g *fproto_gowrap.Generator) error {
 	return nil
 }
 
-func (c *Customizer_SQLTag) GenerateServiceCode(g *fproto_gowrap.Generator, dep *fdep.Dep, filedep *fdep.FileDep) error {
+func (c *Customizer_SQLTag) GenerateServiceCode(g *fproto_gowrap.Generator) error {
 	return nil
 }
