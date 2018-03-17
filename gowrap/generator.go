@@ -787,7 +787,7 @@ func (g *Generator) generateOneOf(oneof *fproto.OneofFieldElement) error {
 			//
 			// func (*STRUCT_ONEOFFIELD) Import()  {}
 			//
-			g.FImpExp().GenerateCommentLine("IMPORT: ", oneofFieldGoName)
+			g.FImpExp().GenerateCommentLine("IMPORT: ", oneofFieldProtoName)
 
 			g.FImpExp().P("func ", oneofFieldGoName, "_Import(s *", go_alias_ie, ".", oneofFieldGoName, ") (*", oneofFieldGoName, ", error) {")
 			g.FImpExp().In()
