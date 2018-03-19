@@ -237,7 +237,7 @@ func (g *Generator) GetScope(element fproto.FProtoElement) []string {
 				ret = append(ret, el.Name)
 			}
 			cur = el.Parent
-		case *fproto.OneofFieldElement:
+		case *fproto.OneOfFieldElement:
 			if !isfirst {
 				ret = append(ret, el.Name)
 			}
@@ -356,7 +356,7 @@ func (g *Generator) generateMessage(message *fproto.MessageElement) error {
 			}
 
 			g.FMain().P(fldGoName, " map[", keytc_gowrap.TypeName(g.FMain(), TNT_TYPENAME), "]", tc_gowrap.TypeName(g.FMain(), TNT_TYPENAME), field_tag.OutputWithSpace())
-		case *fproto.OneofFieldElement:
+		case *fproto.OneOfFieldElement:
 			// fieldname isSTRUCT_ONEOF
 			g.FMain().GenerateComment(xfld.Comment)
 
@@ -450,7 +450,7 @@ func (g *Generator) generateMessage(message *fproto.MessageElement) error {
 
 			g.FImpExp().Out()
 			g.FImpExp().P("}")
-		case *fproto.OneofFieldElement:
+		case *fproto.OneOfFieldElement:
 			g.FImpExp().P("switch en := s.", fldGoName, ".(type) {")
 
 			for _, oofld := range xfld.Fields {
@@ -562,7 +562,7 @@ func (g *Generator) generateMessage(message *fproto.MessageElement) error {
 
 			g.FImpExp().Out()
 			g.FImpExp().P("}")
-		case *fproto.OneofFieldElement:
+		case *fproto.OneOfFieldElement:
 			g.FImpExp().P("switch en := m.", fldGoName, ".(type) {")
 
 			for _, oofld := range xfld.Fields {
@@ -603,7 +603,7 @@ func (g *Generator) generateMessage(message *fproto.MessageElement) error {
 	// Oneofs
 	for _, fld := range message.Fields {
 		switch xfld := fld.(type) {
-		case *fproto.OneofFieldElement:
+		case *fproto.OneOfFieldElement:
 			err := g.generateOneOf(xfld)
 			if err != nil {
 				return err
@@ -696,7 +696,7 @@ func (g *Generator) generateEnum(enum *fproto.EnumElement) error {
 	return nil
 }
 
-func (g *Generator) BuildOneOfName(oneof *fproto.OneofFieldElement) (goName string, protoName string, protoScope string) {
+func (g *Generator) BuildOneOfName(oneof *fproto.OneOfFieldElement) (goName string, protoName string, protoScope string) {
 	// Get the oneof scope on the current file as an array
 	scope := g.GetScope(oneof)
 
@@ -721,7 +721,7 @@ func (g *Generator) BuildOneOfFieldName(oneoffield fproto.FieldElementTag) (goNa
 	return
 }
 
-func (g *Generator) generateOneOf(oneof *fproto.OneofFieldElement) error {
+func (g *Generator) generateOneOf(oneof *fproto.OneOfFieldElement) error {
 	// CUSTOMIZER
 	cz := &wrapCustomizers{g.Customizers}
 
@@ -866,7 +866,7 @@ func (g *Generator) BuildTypeName(dt *fdep.DepType) (goName string, protoName st
 		case *fproto.EnumElement:
 			goName, protoName, protoScope = g.BuildEnumName(item)
 			return
-		case *fproto.OneofFieldElement:
+		case *fproto.OneOfFieldElement:
 			goName, protoName, protoScope = g.BuildOneOfName(item)
 			return
 		case fproto.FieldElementTag:
