@@ -247,6 +247,12 @@ func (g *Generator) GetScope(element fproto.FProtoElement) []string {
 				ret = append(ret, el.Name)
 			}
 			cur = el.Parent
+		case *fproto.FieldElement:
+			// don't add to list
+			cur = el.Parent
+		case *fproto.MapFieldElement:
+			// don't add to list
+			cur = el.Parent
 		default:
 			cur = nil
 		}
