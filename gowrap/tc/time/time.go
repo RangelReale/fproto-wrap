@@ -7,6 +7,11 @@ import (
 	"github.com/RangelReale/fproto/fdep"
 )
 
+const (
+	TCID_TIME     string = "de426778-4912-450e-b531-8e83f8056ce3"
+	TCID_NULLTIME string = "11ed386a-0cee-4590-9090-b03c0325e13a"
+)
+
 // Converts between google.protobuf.Timestamp and time.Time
 type TypeConverterPlugin_Time struct {
 }
@@ -27,6 +32,10 @@ func (t *TypeConverterPlugin_Time) GetTypeConverter(tp *fdep.DepType) fproto_gow
 
 // Converter
 type TypeConverter_Time struct {
+}
+
+func (t *TypeConverter_Time) TCID() string {
+	return TCID_TIME
 }
 
 func (t *TypeConverter_Time) TypeName(g *fproto_gowrap.GeneratorFile, tntype fproto_gowrap.TypeConverterTypeNameType) string {
@@ -60,6 +69,10 @@ func (t *TypeConverter_Time) GenerateExport(g *fproto_gowrap.GeneratorFile, varS
 
 // Converter Null
 type TypeConverter_NullTime struct {
+}
+
+func (t *TypeConverter_NullTime) TCID() string {
+	return TCID_NULLTIME
 }
 
 func (t *TypeConverter_NullTime) TypeName(g *fproto_gowrap.GeneratorFile, tntype fproto_gowrap.TypeConverterTypeNameType) string {

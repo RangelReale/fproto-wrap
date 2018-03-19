@@ -7,6 +7,11 @@ import (
 	"github.com/RangelReale/fproto/fdep"
 )
 
+const (
+	TCID_UUID     string = "5f381deb-11a8-4ab7-ae80-7501c1dabd95"
+	TCID_NULLUUID string = "d0b80892-1684-45a2-a30a-0e794c51a42a"
+)
+
 //
 // UUID
 // Converts between fproto_wrap.UUID and github.com/RangelReale/go.uuid UUID
@@ -35,6 +40,10 @@ func (t *TypeConverterPlugin_UUID) GetTypeConverter(tp *fdep.DepType) fproto_gow
 //
 
 type TypeConverter_UUID struct {
+}
+
+func (t *TypeConverter_UUID) TCID() string {
+	return TCID_UUID
 }
 
 func (t *TypeConverter_UUID) TypeName(g *fproto_gowrap.GeneratorFile, tntype fproto_gowrap.TypeConverterTypeNameType) string {
@@ -81,6 +90,10 @@ func (t *TypeConverter_UUID) GenerateExport(g *fproto_gowrap.GeneratorFile, varS
 //
 
 type TypeConverter_NullUUID struct {
+}
+
+func (t *TypeConverter_NullUUID) TCID() string {
+	return TCID_NULLUUID
 }
 
 func (t *TypeConverter_NullUUID) TypeName(g *fproto_gowrap.GeneratorFile, tntype fproto_gowrap.TypeConverterTypeNameType) string {

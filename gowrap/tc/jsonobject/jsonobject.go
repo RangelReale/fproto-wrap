@@ -5,6 +5,10 @@ import (
 	"github.com/RangelReale/fproto/fdep"
 )
 
+const (
+	TCID_JSONOBJECT string = "ad6a0d05-2ff0-42eb-b90e-dde487fd5141"
+)
+
 //
 // JSONObject
 // Converts between fproto_gowrap.tc.json.JSON and map[string]interface{}
@@ -28,6 +32,10 @@ func (t *TypeConverterPlugin_JSONObject) GetTypeConverter(tp *fdep.DepType) fpro
 //
 
 type TypeConverter_JSONObject struct {
+}
+
+func (t *TypeConverter_JSONObject) TCID() string {
+	return TCID_JSONOBJECT
 }
 
 func (t *TypeConverter_JSONObject) TypeName(g *fproto_gowrap.GeneratorFile, tntype fproto_gowrap.TypeConverterTypeNameType) string {

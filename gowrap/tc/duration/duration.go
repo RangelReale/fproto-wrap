@@ -7,6 +7,10 @@ import (
 	"github.com/RangelReale/fproto/fdep"
 )
 
+const (
+	TCID_DURATION string = "9be62862-ed8b-4469-9c2c-d8fc6bc0054d"
+)
+
 // Converts between google.protobuf.Duration and time.Duration
 type TypeConverterPlugin_Duration struct {
 }
@@ -22,6 +26,10 @@ func (t *TypeConverterPlugin_Duration) GetTypeConverter(tp *fdep.DepType) fproto
 
 // Converter
 type TypeConverter_Duration struct {
+}
+
+func (t *TypeConverter_Duration) TCID() string {
+	return TCID_DURATION
 }
 
 func (t *TypeConverter_Duration) TypeName(g *fproto_gowrap.GeneratorFile, tntype fproto_gowrap.TypeConverterTypeNameType) string {

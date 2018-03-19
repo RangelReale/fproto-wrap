@@ -18,6 +18,9 @@ type TypeConverterPlugin interface {
 }
 
 type TypeConverter interface {
+	// Returns an UUID string uniquelly identifying this type converter (without {})
+	TCID() string
+
 	// Gets the type name in relation to the current file
 	TypeName(g *GeneratorFile, tntype TypeConverterTypeNameType) string
 

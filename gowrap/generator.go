@@ -903,6 +903,18 @@ func (g *Generator) GetGowrapType(scope, fldtype string) (TypeConverter, error) 
 	}
 }
 
+// Get gowrap type using DepType
+func (g *Generator) GetGowrapTypeByDepType(tp *fdep.DepType) (TypeConverter, error) {
+	if tp.IsScalar() {
+		return &TypeConverter_Scalar{tp, tp.ScalarType.ProtoType()}, nil
+	} else {
+		if tc := g.getTypeConv(tp); tc != nil {
+			return tc, nil
+		}
+		return &TypeConverter_Default{g, tp, g.filedep, true}, nil
+	}
+}
+
 // Get go type
 // The parameters MUST be protobuf names
 func (g *Generator) GetGoType(scope, fldtype string) (TypeConverter, error) {
