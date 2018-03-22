@@ -6,6 +6,7 @@ import (
 	"strings"
 
 	"github.com/RangelReale/fproto"
+	"github.com/RangelReale/fproto-wrap"
 	"github.com/RangelReale/fproto/fdep"
 )
 
@@ -278,7 +279,7 @@ func (g *Generator) BuildMessageName(message *fproto.MessageElement) (goName str
 	// Get the message scope on the current file as an array
 	scope := g.GetScope(message)
 
-	goName = CamelCaseSlice(append(scope, CamelCase(message.Name)))
+	goName = fproto_wrap.CamelCaseSlice(append(scope, fproto_wrap.CamelCase(message.Name)))
 	protoName = strings.Join(append(scope, message.Name), ".")
 	protoScope = strings.Join(scope, ".")
 
@@ -287,7 +288,7 @@ func (g *Generator) BuildMessageName(message *fproto.MessageElement) (goName str
 
 // Builds the field name.
 func (g *Generator) BuildFieldName(field fproto.FieldElementTag) (goName string, protoName string) {
-	goName = CamelCase(field.FieldName())
+	goName = fproto_wrap.CamelCase(field.FieldName())
 	protoName = field.FieldName()
 
 	return
@@ -632,7 +633,7 @@ func (g *Generator) BuildEnumName(enum *fproto.EnumElement) (goName string, prot
 	// Get the enum scope on the current file as an array
 	scope := g.GetScope(enum)
 
-	goName = CamelCaseSlice(append(scope, CamelCase(enum.Name)))
+	goName = fproto_wrap.CamelCaseSlice(append(scope, fproto_wrap.CamelCase(enum.Name)))
 	protoName = strings.Join(append(scope, enum.Name), ".")
 	protoScope = strings.Join(scope, ".")
 
@@ -646,10 +647,10 @@ func (g *Generator) BuildEnumConstantName(ec *fproto.EnumConstantElement) (goNam
 	// constants from root enums are named differently
 	var ecbasename string
 	if len(scope) <= 1 {
-		ecbasename = CamelCaseSlice(scope)
+		ecbasename = fproto_wrap.CamelCaseSlice(scope)
 	} else {
 		// ignore the last scope
-		ecbasename = CamelCaseSlice(scope[:len(scope)-1])
+		ecbasename = fproto_wrap.CamelCaseSlice(scope[:len(scope)-1])
 	}
 
 	// enum constant name isn't camel-cased
@@ -707,7 +708,7 @@ func (g *Generator) BuildOneOfName(oneof *fproto.OneOfFieldElement) (goName stri
 	scope := g.GetScope(oneof)
 
 	// oneof have an "is" prefix
-	goName = "is" + CamelCaseSlice(append(scope, CamelCase(oneof.Name)))
+	goName = "is" + fproto_wrap.CamelCaseSlice(append(scope, fproto_wrap.CamelCase(oneof.Name)))
 	protoName = strings.Join(append(scope, oneof.Name), ".")
 	protoScope = strings.Join(scope, ".")
 
@@ -720,7 +721,7 @@ func (g *Generator) BuildOneOfFieldName(oneoffield fproto.FieldElementTag) (goNa
 	parent_scope := g.GetScope(oneoffield.ParentElement())
 
 	// the Go name uses the parent as scope
-	goName = CamelCaseSlice(append(parent_scope, CamelCase(oneoffield.FieldName())))
+	goName = fproto_wrap.CamelCaseSlice(append(parent_scope, fproto_wrap.CamelCase(oneoffield.FieldName())))
 	protoName = strings.Join(append(scope, oneoffield.FieldName()), ".")
 	protoScope = strings.Join(scope, ".")
 

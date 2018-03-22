@@ -4,6 +4,7 @@ import (
 	"strings"
 
 	"github.com/RangelReale/fproto"
+	"github.com/RangelReale/fproto-wrap"
 )
 
 // Generates service specifications for gRPC
@@ -29,7 +30,7 @@ func (s *ServiceGen_gRPC) GenerateService(g *Generator, svc *fproto.ServiceEleme
 	util_alias = g.FService().Dep("github.com/RangelReale/fproto-wrap/gowrap/util", "fproto_gowrap_util")
 	func_alias := g.FService().FileDep(nil, "", false)
 
-	svcName := CamelCase(svc.Name)
+	svcName := fproto_wrap.CamelCase(svc.Name)
 
 	//
 	// CLIENT

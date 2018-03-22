@@ -1,19 +1,17 @@
-package fproto_gowrap
+package fproto_wrap
 
 import (
 	"strings"
 	"unicode"
 )
 
-// And now lots of helper functions.
-
 // Is c an ASCII lower-case letter?
-func isASCIILower(c byte) bool {
+func IsASCIILower(c byte) bool {
 	return 'a' <= c && c <= 'z'
 }
 
 // Is c an ASCII digit?
-func isASCIIDigit(c byte) bool {
+func IsASCIIDigit(c byte) bool {
 	return '0' <= c && c <= '9'
 }
 
@@ -42,21 +40,21 @@ func CamelCase(s string) string {
 	// upper case letter. Digits are treated as words.
 	for ; i < len(s); i++ {
 		c := s[i]
-		if c == '_' && i+1 < len(s) && isASCIILower(s[i+1]) {
+		if c == '_' && i+1 < len(s) && IsASCIILower(s[i+1]) {
 			continue // Skip the underscore in s.
 		}
-		if isASCIIDigit(c) {
+		if IsASCIIDigit(c) {
 			t = append(t, c)
 			continue
 		}
 		// Assume we have a letter now - if not, it's a bogus identifier.
 		// The next word is a sequence of characters that must start upper case.
-		if isASCIILower(c) {
+		if IsASCIILower(c) {
 			c ^= ' ' // Make it a capital letter.
 		}
 		t = append(t, c) // Guaranteed not lower case.
 		// Accept lower case sequence that follows.
-		for i+1 < len(s) && isASCIILower(s[i+1]) {
+		for i+1 < len(s) && IsASCIILower(s[i+1]) {
 			i++
 			t = append(t, s[i])
 		}
@@ -79,8 +77,9 @@ func CamelCaseProto(s string) string {
 	return CamelCaseSlice(strings.Split(s, "."))
 }
 
-// baseName returns the last path element of the name, with the last dotted suffix removed.
-func baseName(name string) string {
+// BaseName returns the last path element of the name, with the last dotted suffix removed.
+// (e.g. the filename without extension)
+func BaseName(name string) string {
 	// First, find the last element
 	if i := strings.LastIndex(name, "/"); i >= 0 {
 		name = name[i+1:]
@@ -109,4 +108,8 @@ func SnakeCase(in string) string {
 	return string(out)
 }
 
-func unexport(s string) string { return strings.ToLower(s[:1]) + s[1:] }
+// UCFirst converts the first char of the string to uppercase
+func UCFirst(s string) string { return strings.ToUpper(s[:1]) + s[1:] }
+
+// LCFirst converts the first char of the string to lowercase
+func LCFirst(s string) string { return strings.ToLower(s[:1]) + s[1:] }

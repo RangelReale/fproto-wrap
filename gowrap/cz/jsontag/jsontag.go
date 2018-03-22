@@ -4,6 +4,7 @@ import (
 	"fmt"
 
 	"github.com/RangelReale/fproto"
+	"github.com/RangelReale/fproto-wrap"
 	"github.com/RangelReale/fproto-wrap/gowrap"
 )
 
@@ -18,7 +19,7 @@ func (c *Customizer_JSONTag) GetTag(g *fproto_gowrap.Generator, currentTag *fpro
 		if jsonopt != nil && jsonopt.Value.String() == "true" {
 			currentTag.Set("json", "-")
 		} else {
-			fieldname := fproto_gowrap.SnakeCase(fitem.FieldName())
+			fieldname := fproto_wrap.SnakeCase(fitem.FieldName())
 			fnopt := fitem.FindOption("fproto_wrap.jsontag.tag_fieldname")
 			if fnopt != nil && fnopt.Value.String() != "" {
 				fieldname = fnopt.Value.String()
