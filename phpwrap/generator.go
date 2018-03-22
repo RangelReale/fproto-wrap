@@ -180,6 +180,11 @@ func (g *Generator) Generate() error {
 		return err
 	}
 
+	err = g.GenerateServices()
+	if err != nil {
+		return err
+	}
+
 	// CUSTOMIZER
 	/*
 		cz := &wrapCustomizers{g.Customizers}
@@ -919,6 +924,22 @@ func (g *Generator) GenerateMessage(message *fproto.MessageElement) error {
 	// end class
 	gf.Out()
 	gf.P("}")
+
+	return nil
+}
+
+// Generates the protobuf services
+func (g *Generator) GenerateServices() error {
+	if g.ServiceGen == nil || len(g.filedep.ProtoFile.Services) == 0 {
+		return nil
+	}
+
+	for _, s := range g.filedep.ProtoFile.CollectServices() {
+		err := g.ServiceGen.GenerateService(g, s.(*fproto.ServiceElement))
+		if err != nil {
+			return err
+		}
+	}
 
 	return nil
 }
