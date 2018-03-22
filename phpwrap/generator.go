@@ -598,122 +598,9 @@ func (g *Generator) GenerateMessage(message *fproto.MessageElement) error {
 	gf.In()
 
 	for _, fld := range message.Fields {
-		fldname, fldgetter, fldsetter := g.BuildFieldName(fld)
-
-		switch xfld := fld.(type) {
-		case *fproto.FieldElement:
-			// Get field type
-			tp_fld, err := tp_msg.MustGetType(xfld.Type)
-			if err != nil {
-				return err
-			}
-
-			typeconv := g.GetTypeConverter(tp_fld)
-
-			if !typeconv.IsScalar() {
-				gf.P("if ($source->", fldgetter, "() !== null) {")
-				gf.In()
-			}
-
-			varName := "$" + fldname + "__wrap"
-
-			source_field := "$source->" + fldgetter + "()"
-			dest_field := varName
-
-			if xfld.Repeated {
-				gf.P(varName, " = [];")
-
-				gf.P("foreach ($source->", fldgetter, "() as $ms) {")
-				gf.In()
-				source_field = "$ms"
-				dest_field = "$msi"
-			}
-
-			generated, err := typeconv.GenerateImport(gf, source_field, dest_field, "error")
-			if err != nil {
-				return err
-			}
-
-			if !generated && !xfld.Repeated {
-				// assign directly
-				varName = "$source->" + fldgetter + "()"
-			}
-
-			if xfld.Repeated {
-				if generated {
-					gf.P(varName, "[] = $msi;")
-				} else {
-					gf.P(varName, "[] = $source->", fldgetter, "();")
-				}
-
-				gf.Out()
-				gf.P("}")
-			}
-
-			gf.P("$this->", fldsetter, "(", varName, ");")
-
-			if !typeconv.IsScalar() {
-				gf.Out()
-				gf.P("}")
-			}
-		case *fproto.MapFieldElement:
-			// Get map field type
-			tp_fld, err := tp_msg.MustGetType(xfld.Type)
-			if err != nil {
-				return err
-			}
-
-			typeconv := g.GetTypeConverter(tp_fld)
-
-			if !typeconv.IsScalar() {
-				gf.P("if ($source->", fldgetter, "() !== null) {")
-				gf.In()
-			}
-
-			varName := "$" + fldname + "__wrapmap"
-
-			gf.P(varName, " = [];")
-
-			gf.P("foreach ($source->", fldgetter, "() as $msidx => $ms) {")
-			gf.In()
-
-			generated, err := typeconv.GenerateImport(gf, "$ms", "$msi", "error")
-			if err != nil {
-				return err
-			}
-
-			if generated {
-				gf.P(varName, "[$msidx] = $msi;")
-			} else {
-				gf.P(varName, "[$msidx] = $source->", fldgetter, "();")
-			}
-
-			gf.Out()
-			gf.P("}")
-
-			gf.P("$this->", fldsetter, "(", varName, ");")
-
-			if !typeconv.IsScalar() {
-				gf.Out()
-				gf.P("}")
-			}
-
-		case *fproto.OneOfFieldElement:
-			gf.P("switch ($source->", fldgetter, "()) {")
-
-			for _, oofld := range xfld.Fields {
-				oofldname, oofldgetter, oofldsetter := g.BuildFieldName(oofld)
-
-				gf.P("case '", oofldname, "':")
-				gf.In()
-
-				gf.P("$this->", oofldsetter, "($source->", oofldgetter, "());")
-
-				gf.P("break;")
-				gf.Out()
-			}
-
-			gf.P("}")
+		err := g.generateFieldImport(gf, tp_msg, fld)
+		if err != nil {
+			return err
 		}
 	}
 
@@ -738,91 +625,9 @@ func (g *Generator) GenerateMessage(message *fproto.MessageElement) error {
 	gf.P("$ret = new \\", sourceNS, "\\", msPhpName, "();")
 
 	for _, fld := range message.Fields {
-		fldname, _, fldsetter := g.BuildFieldName(fld)
-
-		switch xfld := fld.(type) {
-		case *fproto.FieldElement:
-			tp_fld, err := tp_msg.MustGetType(xfld.Type)
-			if err != nil {
-				return err
-			}
-
-			if tp_fld.IsScalar() || !tp_fld.IsPointer() || tp_fld.FileDep.DepType != fdep.DepType_Own {
-				gf.P("$ret->", fldsetter, "($this->", fldname, ");")
-			} else {
-				gf.P("if (isset($this->", fldname, ")) {")
-				gf.In()
-
-				if !xfld.Repeated {
-					tc := g.getTypeConv(tp_fld)
-					if tc != nil {
-						varName := "$" + fldname + "__export"
-						tc.GenerateExport(gf, "$this->"+fldname, varName, "error")
-						gf.P("$ret->", fldsetter, "(", varName, ");")
-					} else {
-						gf.P("$ret->", fldsetter, "($this->", fldname, "->export());")
-					}
-				} else {
-					varName := "$" + fldname + "__array"
-
-					gf.P(varName, " = [];")
-					gf.P("foreach ($this->", fldname, " as $mi => $mv) {")
-					gf.In()
-
-					gf.P(varName, "[] = $mv->export();")
-
-					gf.Out()
-					gf.P("}")
-
-					gf.P("$ret->", fldsetter, "(", varName, ");")
-				}
-
-				gf.Out()
-				gf.P("}")
-			}
-		case *fproto.MapFieldElement:
-			tp_fld, err := tp_msg.MustGetType(xfld.Type)
-			if err != nil {
-				return err
-			}
-
-			gf.P("if (isset($this->", fldname, ")) {")
-			gf.In()
-
-			varName := "$" + fldname + "__map"
-
-			gf.P(varName, " = [];")
-			gf.P("foreach ($this->", fldname, " as $mi => $mv) {")
-			gf.In()
-
-			if tp_fld.IsScalar() || !tp_fld.IsPointer() || tp_fld.FileDep.DepType != fdep.DepType_Own {
-				gf.P(varName, "[$mi] = $mv;")
-			} else {
-				gf.P(varName, "[$mi] = $mv->export();")
-			}
-
-			gf.Out()
-			gf.P("}")
-
-			gf.P("$ret->", fldsetter, "(", varName, ");")
-
-			gf.Out()
-			gf.P("}")
-		case *fproto.OneOfFieldElement:
-			gf.P("switch ($this->", fldname, ") {")
-
-			for _, oofld := range xfld.Fields {
-				oofldname, _, oofldsetter := g.BuildFieldName(oofld)
-
-				gf.P("case '", oofldname, "':")
-				gf.In()
-				gf.P("$ret->", oofldsetter, "($this->", fldname, ");")
-				gf.P("break;")
-				gf.Out()
-			}
-
-			gf.P("}")
-
+		err := g.generateFieldExport(gf, tp_msg, fld)
+		if err != nil {
+			return err
 		}
 	}
 
@@ -939,6 +744,261 @@ func (g *Generator) GenerateMessage(message *fproto.MessageElement) error {
 	// end class
 	gf.Out()
 	gf.P("}")
+
+	return nil
+}
+
+func (g *Generator) generateFieldImport(gf *GeneratorFile, parent_type *fdep.DepType, fld fproto.FieldElementTag) error {
+	fldname, fldgetter, fldsetter := g.BuildFieldName(fld)
+
+	switch xfld := fld.(type) {
+	case *fproto.FieldElement:
+		// Get field type
+		tp_fld, err := parent_type.MustGetType(xfld.Type)
+		if err != nil {
+			return err
+		}
+
+		typeconv := g.GetTypeConverter(tp_fld)
+
+		if !typeconv.IsScalar() {
+			gf.P("if ($source->", fldgetter, "() !== null) {")
+			gf.In()
+		}
+
+		varName := "$" + fldname + "__wrap"
+
+		source_field := "$source->" + fldgetter + "()"
+		dest_field := varName
+
+		if xfld.Repeated {
+			gf.P(varName, " = [];")
+
+			gf.P("foreach ($source->", fldgetter, "() as $ms) {")
+			gf.In()
+			source_field = "$ms"
+			dest_field = "$msi"
+		}
+
+		generated, err := typeconv.GenerateImport(gf, source_field, dest_field, "error")
+		if err != nil {
+			return err
+		}
+
+		if !generated && !xfld.Repeated {
+			// assign directly
+			varName = "$source->" + fldgetter + "()"
+		}
+
+		if xfld.Repeated {
+			if generated {
+				gf.P(varName, "[] = $msi;")
+			} else {
+				gf.P(varName, "[] = $ms;")
+			}
+
+			gf.Out()
+			gf.P("}")
+		}
+
+		gf.P("$this->", fldsetter, "(", varName, ");")
+
+		if !typeconv.IsScalar() {
+			gf.Out()
+			gf.P("}")
+		}
+	case *fproto.MapFieldElement:
+		// Get map field type
+		tp_fld, err := parent_type.MustGetType(xfld.Type)
+		if err != nil {
+			return err
+		}
+
+		typeconv := g.GetTypeConverter(tp_fld)
+
+		if !typeconv.IsScalar() {
+			gf.P("if ($source->", fldgetter, "() !== null) {")
+			gf.In()
+		}
+
+		varName := "$" + fldname + "__wrapmap"
+
+		gf.P(varName, " = [];")
+
+		gf.P("foreach ($source->", fldgetter, "() as $msidx => $ms) {")
+		gf.In()
+
+		generated, err := typeconv.GenerateImport(gf, "$ms", "$msi", "error")
+		if err != nil {
+			return err
+		}
+
+		if generated {
+			gf.P(varName, "[$msidx] = $msi;")
+		} else {
+			gf.P(varName, "[$msidx] = $ms;")
+		}
+
+		gf.Out()
+		gf.P("}")
+
+		gf.P("$this->", fldsetter, "(", varName, ");")
+
+		if !typeconv.IsScalar() {
+			gf.Out()
+			gf.P("}")
+		}
+
+	case *fproto.OneOfFieldElement:
+		gf.P("switch ($source->", fldgetter, "()) {")
+
+		tp_oo := g.dep.DepTypeFromElement(xfld)
+		if tp_oo == nil {
+			return fmt.Errorf("Could not find dep type from oneof %s", xfld.Name)
+		}
+
+		for _, oofld := range xfld.Fields {
+			oofldname, _, _ := g.BuildFieldName(oofld)
+
+			gf.P("case '", oofldname, "':")
+			gf.In()
+
+			err := g.generateFieldImport(gf, tp_oo, oofld)
+			if err != nil {
+				return err
+			}
+
+			gf.P("break;")
+			gf.Out()
+		}
+
+		gf.P("}")
+	}
+
+	return nil
+}
+
+func (g *Generator) generateFieldExport(gf *GeneratorFile, parent_type *fdep.DepType, fld fproto.FieldElementTag) error {
+	fldname, _, fldsetter := g.BuildFieldName(fld)
+
+	switch xfld := fld.(type) {
+	case *fproto.FieldElement:
+		tp_fld, err := parent_type.MustGetType(xfld.Type)
+		if err != nil {
+			return err
+		}
+
+		typeconv := g.GetTypeConverter(tp_fld)
+
+		if !typeconv.IsScalar() {
+			gf.P("if ($this->", fldname, " !== null) {")
+			gf.In()
+		}
+
+		varName := "$" + fldname + "__export"
+
+		source_field := "$this->" + fldname
+		dest_field := varName
+
+		if xfld.Repeated {
+			gf.P(varName, " = [];")
+
+			gf.P("foreach ($this->", fldname, " as $ms) {")
+			gf.In()
+			source_field = "$ms"
+			dest_field = "$msi"
+		}
+
+		generated, err := typeconv.GenerateExport(gf, source_field, dest_field, "error")
+		if err != nil {
+			return err
+		}
+
+		if !generated && !xfld.Repeated {
+			// assign directly
+			varName = "$this->" + fldname
+		}
+
+		if xfld.Repeated {
+			if generated {
+				gf.P(varName, "[] = $msi;")
+			} else {
+				gf.P(varName, "[] = $ms;")
+			}
+
+			gf.Out()
+			gf.P("}")
+		}
+
+		gf.P("$ret->", fldsetter, "(", varName, ");")
+
+		if !typeconv.IsScalar() {
+			gf.Out()
+			gf.P("}")
+		}
+
+	case *fproto.MapFieldElement:
+		tp_fld, err := parent_type.MustGetType(xfld.Type)
+		if err != nil {
+			return err
+		}
+
+		typeconv := g.GetTypeConverter(tp_fld)
+
+		gf.P("if ($this->", fldname, " !== null) {")
+		gf.In()
+
+		varName := "$" + fldname + "__export"
+
+		gf.P(varName, " = [];")
+
+		gf.P("foreach ($this->", fldname, " as $msidx => $ms) {")
+		gf.In()
+
+		generated, err := typeconv.GenerateExport(gf, "$ms", "$msi", "error")
+		if err != nil {
+			return err
+		}
+
+		if generated {
+			gf.P(varName, "[$msidx] = $msi;")
+		} else {
+			gf.P(varName, "[$msidx] = $ms;")
+		}
+
+		gf.Out()
+		gf.P("}")
+
+		gf.P("$ret->", fldsetter, "(", varName, ");")
+
+		gf.Out()
+		gf.P("}")
+	case *fproto.OneOfFieldElement:
+		gf.P("switch ($this->", fldname, ") {")
+
+		tp_oo := g.dep.DepTypeFromElement(xfld)
+		if tp_oo == nil {
+			return fmt.Errorf("Could not find dep type from oneof %s", xfld.Name)
+		}
+
+		for _, oofld := range xfld.Fields {
+			oofldname, _, _ := g.BuildFieldName(oofld)
+
+			gf.P("case '", oofldname, "':")
+			gf.In()
+
+			err := g.generateFieldExport(gf, tp_oo, oofld)
+			if err != nil {
+				return err
+			}
+
+			gf.P("break;")
+			gf.Out()
+		}
+
+		gf.P("}")
+
+	}
 
 	return nil
 }
