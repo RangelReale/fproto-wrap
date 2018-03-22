@@ -828,6 +828,45 @@ func (g *Generator) GenerateMessage(message *fproto.MessageElement) error {
 	gf.P("foreach ($values as $vname => $vvalue) {")
 	gf.In()
 
+	for fidx, fld := range message.Fields {
+		fldname, _, fldsetter := g.BuildFieldName(fld)
+
+		pprefix := ""
+		if fidx > 0 {
+			pprefix = "else "
+		}
+
+		switch xfld := fld.(type) {
+		case *fproto.FieldElement, *fproto.MapFieldElement:
+			gf.P(pprefix, "if ($vname == '", fldname, "') {")
+			gf.In()
+			gf.P("$this->", fldsetter, "($vvalue);")
+			gf.Out()
+			gf.P("}")
+		case *fproto.OneOfFieldElement:
+			for _, oofld := range xfld.Fields {
+				oofldname, _, oofldsetter := g.BuildFieldName(oofld)
+
+				gf.P(pprefix, "if ($vname == '", oofldname, "') {")
+				gf.In()
+				gf.P("$this->", oofldsetter, "($vvalue);")
+				gf.Out()
+				gf.P("}")
+			}
+		}
+
+	}
+
+	if len(message.Fields) > 0 {
+		gf.P("else {")
+		gf.In()
+	}
+	gf.P("throw new \\Exception(\"Param '.$vname.' doesn't exists\");")
+	if len(message.Fields) > 0 {
+		gf.Out()
+		gf.P("}")
+	}
+
 	gf.Out()
 	gf.P("}")
 
@@ -847,6 +886,28 @@ func (g *Generator) GenerateMessage(message *fproto.MessageElement) error {
 	gf.In()
 
 	gf.P("$ret = [];")
+
+	for _, fld := range message.Fields {
+		fldname, fldgetter, _ := g.BuildFieldName(fld)
+
+		switch xfld := fld.(type) {
+		case *fproto.FieldElement, *fproto.MapFieldElement:
+			gf.P("$ret['", fldname, "'] = $this->", fldgetter, "();")
+		case *fproto.OneOfFieldElement:
+			gf.P("switch ($this->", fldname, ") {")
+
+			for _, oofld := range xfld.Fields {
+				oofldname, oofldgetter, _ := g.BuildFieldName(oofld)
+
+				gf.P("case '", oofldname, "':")
+				gf.In()
+				gf.P("$ret['", oofldname, "'] = $this->", oofldgetter, "();")
+				gf.Out()
+			}
+
+			gf.P("}")
+		}
+	}
 
 	gf.P("return $ret;")
 
