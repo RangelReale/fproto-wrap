@@ -21,46 +21,18 @@ func (t *TypeConverter_Default) TCID() string {
 }
 
 func (t *TypeConverter_Default) TypeName(g *GeneratorFile, tntype TypeConverterTypeNameType) string {
-	ret := ""
-
-	/*
-		switch tntype {
-		case TNT_TYPENAME, TNT_POINTER:
-			if t.tp.IsPointer() {
-				ret += "*"
-			}
-		case TNT_FIELD_DEFINITION:
-			if (g.G().Syntax() == GeneratorSyntax_Proto2 && t.tp.CanPointer()) || t.tp.IsPointer() {
-				ret += "*"
-			}
-		case TNT_EMPTYVALUE:
-			if t.tp.IsPointer() {
-				ret += "&"
-			}
-		case TNT_EMPTYORNILVALUE:
-			if t.tp.IsPointer() {
-				return "nil"
-			}
-		}
-
-		// get Go type name
-		goTypeName, _, _ := g.BuildTypeName(t.tp)
-
-		if t.is_gowrap && t.tp.FileDep.IsSamePackage(t.filedep) {
-			ret += fmt.Sprintf("%s", goTypeName)
+	switch tntype {
+	case TNT_NS_WRAPNAME, TNT_NS_SOURCENAME:
+		sourceFieldTypeName, wrapFieldTypeName := g.G().BuildTypeNSName(t.tp)
+		if tntype == TNT_NS_SOURCENAME {
+			return sourceFieldTypeName
 		} else {
-			falias := g.FileDep(t.tp.FileDep, t.tp.Alias, t.is_gowrap)
-			ret += fmt.Sprintf("%s.%s", falias, goTypeName)
+			return wrapFieldTypeName
 		}
+	}
 
-		switch tntype {
-		case TNT_EMPTYVALUE:
-			if t.tp.IsPointer() {
-				ret += "{}"
-			}
-		}
-	*/
-	return ret
+	typeName, _ := g.G().BuildTypeName(t.tp)
+	return typeName
 }
 
 func (t *TypeConverter_Default) IsScalar() bool {
@@ -102,16 +74,7 @@ func (t *TypeConverter_Scalar) TCID() string {
 }
 
 func (t *TypeConverter_Scalar) TypeName(g *GeneratorFile, tntype TypeConverterTypeNameType) string {
-	var ret string
-
-	switch tntype {
-	case TNT_FIELD_DEFINITION:
-		if g.G().Syntax() == GeneratorSyntax_Proto2 && t.tp.CanPointer() {
-			ret += "*"
-		}
-	}
-
-	return ret + ScalarToPhp(*t.tp.ScalarType)
+	return ScalarToPhp(*t.tp.ScalarType)
 }
 
 func (t *TypeConverter_Scalar) IsScalar() bool {

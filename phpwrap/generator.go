@@ -422,10 +422,8 @@ func (g *Generator) GenerateMessage(message *fproto.MessageElement) error {
 				return err
 			}
 
-			_, wrapFieldTypeName := g.BuildTypeNSName(tp_fld)
-			if xfld.Repeated {
-				wrapFieldTypeName += "[]"
-			}
+			typeconv := g.GetTypeConverter(tp_fld)
+			wrapFieldTypeName := typeconv.TypeName(gf, TNT_NS_WRAPNAME)
 
 			gf.GenerateFieldComment(fld, []string{
 				fmt.Sprintf("@var %s", wrapFieldTypeName),
@@ -443,8 +441,11 @@ func (g *Generator) GenerateMessage(message *fproto.MessageElement) error {
 				return err
 			}
 
-			_, wrapFieldTypeName := g.BuildTypeNSName(tp_fld)
-			_, wrapKeyFieldTypeName := g.BuildTypeNSName(tp_keyfld)
+			typeconv := g.GetTypeConverter(tp_fld)
+			typeconv_key := g.GetTypeConverter(tp_keyfld)
+
+			wrapFieldTypeName := typeconv.TypeName(gf, TNT_NS_WRAPNAME)
+			wrapKeyFieldTypeName := typeconv_key.TypeName(gf, TNT_NS_WRAPNAME)
 
 			gf.GenerateFieldComment(fld, []string{
 				fmt.Sprintf("@var %s[] key => %s", wrapFieldTypeName, wrapKeyFieldTypeName),
@@ -470,7 +471,9 @@ func (g *Generator) GenerateMessage(message *fproto.MessageElement) error {
 						return err
 					}
 
-					_, wrapOOFieldTypeName := g.BuildTypeNSName(tp_oofld)
+					ootypeconv := g.GetTypeConverter(tp_oofld)
+					wrapOOFieldTypeName := ootypeconv.TypeName(gf, TNT_NS_WRAPNAME)
+
 					if xoofld.Repeated {
 						wrapOOFieldTypeName += "[]"
 					}
@@ -491,8 +494,11 @@ func (g *Generator) GenerateMessage(message *fproto.MessageElement) error {
 						return err
 					}
 
-					_, wrapOOFieldTypeName := g.BuildTypeNSName(tp_oofld)
-					_, wrapOOKeyFieldTypeName := g.BuildTypeNSName(tp_ookeyfld)
+					ootypeconv := g.GetTypeConverter(tp_oofld)
+					ookeytypeconv := g.GetTypeConverter(tp_ookeyfld)
+
+					wrapOOFieldTypeName := ootypeconv.TypeName(gf, TNT_NS_WRAPNAME)
+					wrapOOKeyFieldTypeName := ookeytypeconv.TypeName(gf, TNT_NS_WRAPNAME)
 
 					gf.GenerateFieldComment(oofld, []string{
 						fmt.Sprintf("@var %s[] key => %s", wrapOOFieldTypeName, wrapOOKeyFieldTypeName),
@@ -524,19 +530,84 @@ func (g *Generator) GenerateMessage(message *fproto.MessageElement) error {
 	for _, fld := range message.Fields {
 		fldname, fldgetter, fldsetter := g.BuildFieldName(fld)
 
-		// public function getField() {
-		// 		return $this->field;
-		// }
-		gf.P("public function ", fldgetter, "() {")
-		gf.In()
-		gf.P("return $this->", fldname, ";")
-		gf.Out()
-		gf.P("}")
-
-		gf.P()
-
 		switch xfld := fld.(type) {
-		case *fproto.FieldElement, *fproto.MapFieldElement:
+		case *fproto.FieldElement:
+			// Get field type
+			tp_fld, err := tp_msg.MustGetType(xfld.Type)
+			if err != nil {
+				return err
+			}
+
+			typeconv := g.GetTypeConverter(tp_fld)
+			wrapFieldTypeName := typeconv.TypeName(gf, TNT_NS_WRAPNAME)
+
+			gf.GenerateFieldComment(nil, []string{
+				fmt.Sprintf("@return %s", wrapFieldTypeName),
+			})
+
+			// public function getField() {
+			// 		return $this->field;
+			// }
+			gf.P("public function ", fldgetter, "() {")
+			gf.In()
+			gf.P("return $this->", fldname, ";")
+			gf.Out()
+			gf.P("}")
+
+			gf.P()
+
+			gf.GenerateFieldComment(nil, []string{
+				fmt.Sprintf("@param %s $var", wrapFieldTypeName),
+			})
+
+			// public function setField($var) {
+			// 		$this->field = $var;
+			//		return $this;
+			// }
+			gf.P("public function ", fldsetter, "($var) {")
+			gf.In()
+			gf.P("$this->", fldname, " = $var;")
+			gf.P("return $this;")
+			gf.Out()
+			gf.P("}")
+
+			gf.P()
+		case *fproto.MapFieldElement:
+			// Get field type
+			tp_fld, err := tp_msg.MustGetType(xfld.Type)
+			if err != nil {
+				return err
+			}
+			tp_keyfld, err := tp_msg.MustGetType(xfld.KeyType)
+			if err != nil {
+				return err
+			}
+
+			typeconv := g.GetTypeConverter(tp_fld)
+			typeconv_key := g.GetTypeConverter(tp_keyfld)
+
+			wrapFieldTypeName := typeconv.TypeName(gf, TNT_NS_WRAPNAME)
+			wrapKeyFieldTypeName := typeconv_key.TypeName(gf, TNT_NS_WRAPNAME)
+
+			gf.GenerateFieldComment(fld, []string{
+				fmt.Sprintf("@return %s[] key => %s", wrapFieldTypeName, wrapKeyFieldTypeName),
+			})
+
+			// public function getField() {
+			// 		return $this->field;
+			// }
+			gf.P("public function ", fldgetter, "() {")
+			gf.In()
+			gf.P("return $this->", fldname, ";")
+			gf.Out()
+			gf.P("}")
+
+			gf.P()
+
+			gf.GenerateFieldComment(nil, []string{
+				fmt.Sprintf("@param %s[] $var key => %s", wrapFieldTypeName, wrapKeyFieldTypeName),
+			})
+
 			// public function setField($var) {
 			// 		$this->field = $var;
 			//		return $this;
@@ -550,6 +621,17 @@ func (g *Generator) GenerateMessage(message *fproto.MessageElement) error {
 
 			gf.P()
 		case *fproto.OneOfFieldElement:
+			// public function getField() {
+			// 		return $this->field;
+			// }
+			gf.P("public function ", fldgetter, "() {")
+			gf.In()
+			gf.P("return $this->", fldname, ";")
+			gf.Out()
+			gf.P("}")
+
+			gf.P()
+
 			// each oneof field have a getter and a setter
 			for _, oofld := range xfld.Fields {
 				oofldname, oofldgetter, oofldsetter := g.BuildFieldName(oofld)

@@ -6,10 +6,16 @@ type TypeConverterTypeNameType int
 
 const (
 	TNT_TYPENAME TypeConverterTypeNameType = iota
-	TNT_FIELD_DEFINITION
-	TNT_EMPTYVALUE
-	TNT_EMPTYORNILVALUE
-	TNT_POINTER
+	TNT_NS_SOURCENAME
+	TNT_NS_WRAPNAME
+
+	/*
+		TNT_TYPENAME TypeConverterTypeNameType = iota
+		TNT_FIELD_DEFINITION
+		TNT_EMPTYVALUE
+		TNT_EMPTYORNILVALUE
+		TNT_POINTER
+	*/
 )
 
 type TypeConverterPlugin interface {
