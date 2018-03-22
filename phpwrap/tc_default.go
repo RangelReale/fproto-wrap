@@ -1,21 +1,19 @@
 package fproto_phpwrap
 
 import (
-	"github.com/RangelReale/fproto"
 	"github.com/RangelReale/fproto/fdep"
 )
 
 const (
-	TCID_DEFAULT string = "d7365856-bd04-413e-976d-350998cc1e7d"
-	TCID_SCALAR  string = "cb67c193-7b51-4392-baa2-3c92ba6015e6"
+	TCID_DEFAULT string = "d7ac6dec-bb7c-48eb-8515-626b94ef8ad3"
+	TCID_SCALAR  string = "10cddb9d-e263-4074-afdf-3505b57fc4c8"
 )
 
 // Default type converter
 type TypeConverter_Default struct {
-	g         *Generator
-	tp        *fdep.DepType
-	filedep   *fdep.FileDep
-	is_gowrap bool
+	g       *Generator
+	tp      *fdep.DepType
+	filedep *fdep.FileDep
 }
 
 func (t *TypeConverter_Default) TCID() string {
@@ -65,59 +63,38 @@ func (t *TypeConverter_Default) TypeName(g *GeneratorFile, tntype TypeConverterT
 	return ret
 }
 
-func (t *TypeConverter_Default) IsPointer() bool {
-	return t.tp.IsPointer()
+func (t *TypeConverter_Default) IsScalar() bool {
+	return false
 }
 
 func (t *TypeConverter_Default) GenerateImport(g *GeneratorFile, varSrc string, varDest string, varError string) (checkError bool, err error) {
-	/*
-			if !g.G().IsFileWrap(t.tp.FileDep) {
-				g.P(varDest, " = ", varSrc)
-				return false, nil
-			}
+	if !g.G().IsFileWrap(t.tp.FileDep) || !t.tp.IsPointer() || t.tp.FileDep.DepType != fdep.DepType_Own {
+		g.P(varDest, " = ", varSrc, ";")
+		return false, nil
+	}
 
-			var falias string
-			if !t.is_gowrap || !t.tp.FileDep.IsSamePackage(t.filedep) {
-				//falias = g.FileDep(t.tp.FileDep, t.tp.Alias, t.is_gowrap) + "."
-			}
+	// convert field value
+	_, wrapFieldTypeName := g.G().BuildTypeNSName(t.tp)
 
-			switch t.tp.Item.(type) {
-			case *fproto.EnumElement:
-				g.P(varDest, " = ", varSrc)
-				return false, nil
-			}
+	g.P(varDest, " = new ", wrapFieldTypeName, "();")
+	g.P(varDest, "->import(", varSrc, ");")
 
-			// get Go type name
-			goTypeName, _, _ := g.BuildTypeName(t.tp)
+	return true, nil
+}
+func (t *TypeConverter_Default) GenerateExport(g *GeneratorFile, varSrc string, varDest string, varError string) (checkError bool, err error) {
+	if !g.G().IsFileWrap(t.tp.FileDep) || !t.tp.IsPointer() || t.tp.FileDep.DepType != fdep.DepType_Own {
+		g.P(varDest, " = ", varSrc, ";")
+		return false, nil
+	}
 
-			// varDest, err = goalias.MyStruct_Import(varSrc)
-			g.P(varDest, ", err = ", falias, goTypeName, "_Import(", varSrc, ")")
+	g.P(varDest, " = ", varSrc, "->export();")
 
-			return true, nil
-		}
-
-		func (t *TypeConverter_Default) GenerateExport(g *GeneratorFile, varSrc string, varDest string, varError string) (checkError bool, err error) {
-			if !g.G().IsFileWrap(t.tp.FileDep) {
-				g.P(varDest, " = ", varSrc)
-				return false, nil
-			}
-
-			switch t.tp.Item.(type) {
-			case *fproto.EnumElement:
-				g.P(varDest, " = ", varSrc)
-				return false, nil
-			}
-
-			// varDest, err = MyStruct.Export()
-			g.P(varDest, ", err = ", varSrc, ".Export()")
-	*/
 	return true, nil
 }
 
 // Type converter for scalar fields
 type TypeConverter_Scalar struct {
-	tp      *fdep.DepType
-	fldtype string
+	tp *fdep.DepType
 }
 
 func (t *TypeConverter_Scalar) TCID() string {
@@ -134,25 +111,25 @@ func (t *TypeConverter_Scalar) TypeName(g *GeneratorFile, tntype TypeConverterTy
 		}
 	}
 
-	if ft, ok := fproto.ParseScalarType(t.fldtype); ok {
-		return ret + ft.GoType()
-	}
-
-	return ret + t.fldtype
+	return ret + ScalarToPhp(*t.tp.ScalarType)
 }
 
-func (t *TypeConverter_Scalar) IsPointer() bool {
-	return false
+func (t *TypeConverter_Scalar) IsScalar() bool {
+	return true
 }
 
-func (t *TypeConverter_Scalar) GenerateImport(g *GeneratorFile, varSrc string, varDest string, varError string) (checkError bool, err error) {
+func (t *TypeConverter_Scalar) GenerateImport(g *GeneratorFile, varSrc string, varDest string, varError string) (generated bool, err error) {
+	return false, nil
+
 	// just assign
-	g.P(varDest, " = ", varSrc)
+	g.P(varDest, " = ", varSrc, ";")
 	return false, nil
 }
 
-func (t *TypeConverter_Scalar) GenerateExport(g *GeneratorFile, varSrc string, varDest string, varError string) (checkError bool, err error) {
+func (t *TypeConverter_Scalar) GenerateExport(g *GeneratorFile, varSrc string, varDest string, varError string) (generated bool, err error) {
+	return false, nil
+
 	// just assign
-	g.P(varDest, " = ", varSrc)
+	g.P(varDest, " = ", varSrc, ";")
 	return false, nil
 }

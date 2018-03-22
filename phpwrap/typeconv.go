@@ -24,12 +24,12 @@ type TypeConverter interface {
 	// Gets the type name in relation to the current file
 	TypeName(g *GeneratorFile, tntype TypeConverterTypeNameType) string
 
-	// Returns if the underlining type is a pointer
-	IsPointer() bool
+	// Returns if the underlining type is scalar
+	IsScalar() bool
 
 	// Generates code to import the type from the Go protobuf generated type
-	GenerateImport(g *GeneratorFile, varSrc string, varDest string, varError string) (checkError bool, err error)
+	GenerateImport(g *GeneratorFile, varSrc string, varDest string, varError string) (generated bool, err error)
 
 	// Generates code to export the type to the Go protobuf generated type
-	GenerateExport(g *GeneratorFile, varSrc string, varDest string, varError string) (checkError bool, err error)
+	GenerateExport(g *GeneratorFile, varSrc string, varDest string, varError string) (generated bool, err error)
 }

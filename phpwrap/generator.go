@@ -608,43 +608,51 @@ func (g *Generator) GenerateMessage(message *fproto.MessageElement) error {
 				return err
 			}
 
-			if tp_fld.IsScalar() || !tp_fld.IsPointer() || tp_fld.FileDep.DepType != fdep.DepType_Own {
-				// scalar or not pointer field
-				gf.P("$this->", fldsetter, "($source->", fldgetter, "());")
-			} else {
-				// convert field value
-				_, wrapFieldTypeName := g.BuildTypeNSName(tp_fld)
+			typeconv := g.GetTypeConverter(tp_fld)
 
+			if !typeconv.IsScalar() {
 				gf.P("if ($source->", fldgetter, "() !== null) {")
 				gf.In()
+			}
 
-				varName := "$" + fldname + "__wrap"
+			varName := "$" + fldname + "__wrap"
 
-				if !xfld.Repeated {
+			source_field := "$source->" + fldgetter + "()"
+			dest_field := varName
 
-					gf.P(varName, " = new ", wrapFieldTypeName, "();")
-					gf.P(varName, "->import($source->", fldgetter, "());")
-					gf.P("$this->", fldsetter, "(", varName, ");")
+			if xfld.Repeated {
+				gf.P(varName, " = [];")
+
+				gf.P("foreach ($source->", fldgetter, "() as $ms) {")
+				gf.In()
+				source_field = "$ms"
+				dest_field = "$msi"
+			}
+
+			generated, err := typeconv.GenerateImport(gf, source_field, dest_field, "error")
+			if err != nil {
+				return err
+			}
+
+			if !generated && !xfld.Repeated {
+				// assign directly
+				varName = "$source->" + fldgetter + "()"
+			}
+
+			if xfld.Repeated {
+				if generated {
+					gf.P(varName, "[] = $msi;")
 				} else {
-					// loop into array
-					gf.P(varName, " = [];")
-
-					gf.P("foreach ($source->", fldgetter, "() as $mi => $mv) {")
-					gf.In()
-
-					itemVarName := "$" + fldname + "__import"
-
-					gf.P(itemVarName, " = new ", wrapFieldTypeName, "();")
-					gf.P(itemVarName, "->import($mv);")
-
-					gf.P(varName, "[] = ", itemVarName, ";")
-
-					gf.Out()
-					gf.P("}")
-
-					gf.P("$this->", fldsetter, "(", varName, ");")
+					gf.P(varName, "[] = $source->", fldgetter, "();")
 				}
 
+				gf.Out()
+				gf.P("}")
+			}
+
+			gf.P("$this->", fldsetter, "(", varName, ");")
+
+			if !typeconv.IsScalar() {
 				gf.Out()
 				gf.P("}")
 			}
@@ -655,28 +663,29 @@ func (g *Generator) GenerateMessage(message *fproto.MessageElement) error {
 				return err
 			}
 
-			varName := "$" + fldname + "__wrap"
+			typeconv := g.GetTypeConverter(tp_fld)
 
-			// convert field value
-			gf.P("if ($source->", fldgetter, "() !== null) {")
-			gf.In()
+			if !typeconv.IsScalar() {
+				gf.P("if ($source->", fldgetter, "() !== null) {")
+				gf.In()
+			}
+
+			varName := "$" + fldname + "__wrapmap"
 
 			gf.P(varName, " = [];")
 
-			gf.P("foreach ($source->", fldgetter, "() as $mi => $mv) {")
+			gf.P("foreach ($source->", fldgetter, "() as $msidx => $ms) {")
 			gf.In()
 
-			if tp_fld.IsScalar() {
-				gf.P(varName, "[$mi] = mv;")
+			generated, err := typeconv.GenerateImport(gf, "$ms", "$msi", "error")
+			if err != nil {
+				return err
+			}
+
+			if generated {
+				gf.P(varName, "[$msidx] = $msi;")
 			} else {
-				_, wrapFieldTypeName := g.BuildTypeNSName(tp_fld)
-
-				varName := "$" + fldname + "__import"
-
-				gf.P(varName, " = new ", wrapFieldTypeName, "();")
-				gf.P(varName, "->import($mv);")
-
-				gf.P(varName, "[$mi] = ", varName, ";")
+				gf.P(varName, "[$msidx] = $source->", fldgetter, "();")
 			}
 
 			gf.Out()
@@ -684,8 +693,11 @@ func (g *Generator) GenerateMessage(message *fproto.MessageElement) error {
 
 			gf.P("$this->", fldsetter, "(", varName, ");")
 
-			gf.Out()
-			gf.P("}")
+			if !typeconv.IsScalar() {
+				gf.Out()
+				gf.P("}")
+			}
+
 		case *fproto.OneOfFieldElement:
 			gf.P("switch ($source->", fldgetter, "()) {")
 
@@ -742,7 +754,14 @@ func (g *Generator) GenerateMessage(message *fproto.MessageElement) error {
 				gf.In()
 
 				if !xfld.Repeated {
-					gf.P("$ret->", fldsetter, "($this->", fldname, "->export());")
+					tc := g.getTypeConv(tp_fld)
+					if tc != nil {
+						varName := "$" + fldname + "__export"
+						tc.GenerateExport(gf, "$this->"+fldname, varName, "error")
+						gf.P("$ret->", fldsetter, "(", varName, ");")
+					} else {
+						gf.P("$ret->", fldsetter, "($this->", fldname, "->export());")
+					}
 				} else {
 					varName := "$" + fldname + "__array"
 
@@ -949,6 +968,19 @@ func (g *Generator) getTypeConv(tp *fdep.DepType) TypeConverter {
 		}
 	}
 	return nil
+}
+
+// Get gowrap type
+// The parameters MUST be protobuf names
+func (g *Generator) GetTypeConverter(tp *fdep.DepType) TypeConverter {
+	if tp.IsScalar() {
+		return &TypeConverter_Scalar{tp}
+	} else {
+		if tc := g.getTypeConv(tp); tc != nil {
+			return tc
+		}
+		return &TypeConverter_Default{g, tp, g.filedep}
+	}
 }
 
 // Returns the source and wrapped namespace.
