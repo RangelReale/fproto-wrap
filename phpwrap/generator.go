@@ -608,7 +608,7 @@ func (g *Generator) GenerateMessage(message *fproto.MessageElement) error {
 
 		pprefix := ""
 		if fidx > 0 {
-			pprefix = "else "
+			pprefix = "} else "
 		}
 
 		switch xfld := fld.(type) {
@@ -617,7 +617,6 @@ func (g *Generator) GenerateMessage(message *fproto.MessageElement) error {
 			gf.In()
 			gf.P("$this->", fldsetter, "($vvalue);")
 			gf.Out()
-			gf.P("}")
 		case *fproto.OneOfFieldElement:
 			for _, oofld := range xfld.Fields {
 				oofldname, _, oofldsetter := g.BuildFieldName(oofld)
@@ -626,14 +625,13 @@ func (g *Generator) GenerateMessage(message *fproto.MessageElement) error {
 				gf.In()
 				gf.P("$this->", oofldsetter, "($vvalue);")
 				gf.Out()
-				gf.P("}")
 			}
 		}
 
 	}
 
 	if len(message.Fields) > 0 {
-		gf.P("else {")
+		gf.P("} else {")
 		gf.In()
 	}
 	gf.P("throw new \\Exception(\"Param '.$vname.' doesn't exists\");")
