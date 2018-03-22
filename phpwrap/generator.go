@@ -170,6 +170,9 @@ func (g *Generator) GetScope(element fproto.FProtoElement) []string {
 
 // Executes the generator
 func (g *Generator) Generate() error {
+	// CUSTOMIZER
+	cz := &wrapCustomizers{g.Customizers}
+
 	err := g.GenerateEnums()
 	if err != nil {
 		return err
@@ -180,42 +183,22 @@ func (g *Generator) Generate() error {
 		return err
 	}
 
+	// CUSTOMIZER
+	err = cz.GenerateCode(g)
+	if err != nil {
+		return err
+	}
+
 	err = g.GenerateServices()
 	if err != nil {
 		return err
 	}
 
 	// CUSTOMIZER
-	/*
-		cz := &wrapCustomizers{g.Customizers}
-
-		err := g.GenerateEnums()
-		if err != nil {
-			return err
-		}
-
-		err = g.GenerateMessages()
-		if err != nil {
-			return err
-		}
-
-		// CUSTOMIZER
-		err = cz.GenerateCode(g)
-		if err != nil {
-			return err
-		}
-
-		err = g.GenerateServices()
-		if err != nil {
-			return err
-		}
-
-		// CUSTOMIZER
-		err = cz.GenerateServiceCode(g)
-		if err != nil {
-			return err
-		}
-	*/
+	err = cz.GenerateServiceCode(g)
+	if err != nil {
+		return err
+	}
 
 	return nil
 }
@@ -400,6 +383,10 @@ func (g *Generator) BuildFieldName(field fproto.FieldElementTag) (fieldname stri
 }
 
 func (g *Generator) GenerateMessage(message *fproto.MessageElement) error {
+	if message.IsExtend {
+		return nil
+	}
+
 	tp_msg := g.dep.DepTypeFromElement(message)
 	if tp_msg == nil {
 		return errors.New("message type not found")
@@ -611,7 +598,7 @@ func (g *Generator) GenerateMessage(message *fproto.MessageElement) error {
 	gf.In()
 
 	for _, fld := range message.Fields {
-		fldname, fldgetter, _ := g.BuildFieldName(fld)
+		fldname, fldgetter, fldsetter := g.BuildFieldName(fld)
 
 		switch xfld := fld.(type) {
 		case *fproto.FieldElement:
@@ -623,7 +610,7 @@ func (g *Generator) GenerateMessage(message *fproto.MessageElement) error {
 
 			if tp_fld.IsScalar() || !tp_fld.IsPointer() || tp_fld.FileDep.DepType != fdep.DepType_Own {
 				// scalar or not pointer field
-				gf.P("$this->", fldname, " = $source->", fldgetter, "();")
+				gf.P("$this->", fldsetter, "($source->", fldgetter, "());")
 			} else {
 				// convert field value
 				_, wrapFieldTypeName := g.BuildTypeNSName(tp_fld)
@@ -631,25 +618,31 @@ func (g *Generator) GenerateMessage(message *fproto.MessageElement) error {
 				gf.P("if ($source->", fldgetter, "() !== null) {")
 				gf.In()
 
+				varName := "$" + fldname + "__wrap"
+
 				if !xfld.Repeated {
-					gf.P("$this->", fldname, " = new ", wrapFieldTypeName, "();")
-					gf.P("$this->", fldname, "->import($source->", fldgetter, "());")
+
+					gf.P(varName, " = new ", wrapFieldTypeName, "();")
+					gf.P(varName, "->import($source->", fldgetter, "());")
+					gf.P("$this->", fldsetter, "(", varName, ");")
 				} else {
 					// loop into array
-					gf.P("$this->", fldname, " = [];")
+					gf.P(varName, " = [];")
 
 					gf.P("foreach ($source->", fldgetter, "() as $mi => $mv) {")
 					gf.In()
 
-					varName := "$" + fldname + "__import"
+					itemVarName := "$" + fldname + "__import"
 
-					gf.P(varName, " = new ", wrapFieldTypeName, "();")
-					gf.P(varName, "->import($mv);")
+					gf.P(itemVarName, " = new ", wrapFieldTypeName, "();")
+					gf.P(itemVarName, "->import($mv);")
 
-					gf.P("$this->", fldname, "[] = ", varName, ";")
+					gf.P(varName, "[] = ", itemVarName, ";")
 
 					gf.Out()
 					gf.P("}")
+
+					gf.P("$this->", fldsetter, "(", varName, ");")
 				}
 
 				gf.Out()
@@ -662,17 +655,19 @@ func (g *Generator) GenerateMessage(message *fproto.MessageElement) error {
 				return err
 			}
 
+			varName := "$" + fldname + "__wrap"
+
 			// convert field value
 			gf.P("if ($source->", fldgetter, "() !== null) {")
 			gf.In()
 
-			gf.P("$this->", fldname, " = [];")
+			gf.P(varName, " = [];")
 
 			gf.P("foreach ($source->", fldgetter, "() as $mi => $mv) {")
 			gf.In()
 
 			if tp_fld.IsScalar() {
-				gf.P("$this->", fldname, "[$mi] = mv;")
+				gf.P(varName, "[$mi] = mv;")
 			} else {
 				_, wrapFieldTypeName := g.BuildTypeNSName(tp_fld)
 
@@ -681,11 +676,13 @@ func (g *Generator) GenerateMessage(message *fproto.MessageElement) error {
 				gf.P(varName, " = new ", wrapFieldTypeName, "();")
 				gf.P(varName, "->import($mv);")
 
-				gf.P("$this->", fldname, "[$mi] = ", varName, ";")
+				gf.P(varName, "[$mi] = ", varName, ";")
 			}
 
 			gf.Out()
 			gf.P("}")
+
+			gf.P("$this->", fldsetter, "(", varName, ");")
 
 			gf.Out()
 			gf.P("}")
@@ -693,13 +690,12 @@ func (g *Generator) GenerateMessage(message *fproto.MessageElement) error {
 			gf.P("switch ($source->", fldgetter, "()) {")
 
 			for _, oofld := range xfld.Fields {
-				oofldname, oofldgetter, _ := g.BuildFieldName(oofld)
+				oofldname, oofldgetter, oofldsetter := g.BuildFieldName(oofld)
 
 				gf.P("case '", oofldname, "':")
 				gf.In()
 
-				gf.P("$this->", oofldname, " = $source->", oofldgetter, "();")
-				gf.P("$this->", fldname, " = '", oofldname, "';")
+				gf.P("$this->", oofldsetter, "($source->", oofldgetter, "());")
 
 				gf.P("break;")
 				gf.Out()
