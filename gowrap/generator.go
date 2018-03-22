@@ -135,7 +135,7 @@ func (g *Generator) GetFileDep() *fdep.FileDep {
 }
 
 // Check if the file should be wrapped (the file option fproto_wrap.wrap=false disables it)
-func (g *Generator) IsFileGowrap(filedep *fdep.FileDep) bool {
+func (g *Generator) IsFileWrap(filedep *fdep.FileDep) bool {
 	if filedep.DepType != fdep.DepType_Own {
 		return false
 	}

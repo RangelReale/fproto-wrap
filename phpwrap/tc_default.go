@@ -1,8 +1,6 @@
-package fproto_gowrap
+package fproto_phpwrap
 
 import (
-	"fmt"
-
 	"github.com/RangelReale/fproto"
 	"github.com/RangelReale/fproto/fdep"
 )
@@ -27,42 +25,43 @@ func (t *TypeConverter_Default) TCID() string {
 func (t *TypeConverter_Default) TypeName(g *GeneratorFile, tntype TypeConverterTypeNameType) string {
 	ret := ""
 
-	switch tntype {
-	case TNT_TYPENAME, TNT_POINTER:
-		if t.tp.IsPointer() {
-			ret += "*"
+	/*
+		switch tntype {
+		case TNT_TYPENAME, TNT_POINTER:
+			if t.tp.IsPointer() {
+				ret += "*"
+			}
+		case TNT_FIELD_DEFINITION:
+			if (g.G().Syntax() == GeneratorSyntax_Proto2 && t.tp.CanPointer()) || t.tp.IsPointer() {
+				ret += "*"
+			}
+		case TNT_EMPTYVALUE:
+			if t.tp.IsPointer() {
+				ret += "&"
+			}
+		case TNT_EMPTYORNILVALUE:
+			if t.tp.IsPointer() {
+				return "nil"
+			}
 		}
-	case TNT_FIELD_DEFINITION:
-		if (g.G().Syntax() == GeneratorSyntax_Proto2 && t.tp.CanPointer()) || t.tp.IsPointer() {
-			ret += "*"
-		}
-	case TNT_EMPTYVALUE:
-		if t.tp.IsPointer() {
-			ret += "&"
-		}
-	case TNT_EMPTYORNILVALUE:
-		if t.tp.IsPointer() {
-			return "nil"
-		}
-	}
 
-	// get Go type name
-	goTypeName, _, _ := g.G().BuildTypeName(t.tp)
+		// get Go type name
+		goTypeName, _, _ := g.BuildTypeName(t.tp)
 
-	if t.is_gowrap && t.tp.FileDep.IsSamePackage(t.filedep) {
-		ret += fmt.Sprintf("%s", goTypeName)
-	} else {
-		falias := g.FileDep(t.tp.FileDep, t.tp.Alias, t.is_gowrap)
-		ret += fmt.Sprintf("%s.%s", falias, goTypeName)
-	}
-
-	switch tntype {
-	case TNT_EMPTYVALUE:
-		if t.tp.IsPointer() {
-			ret += "{}"
+		if t.is_gowrap && t.tp.FileDep.IsSamePackage(t.filedep) {
+			ret += fmt.Sprintf("%s", goTypeName)
+		} else {
+			falias := g.FileDep(t.tp.FileDep, t.tp.Alias, t.is_gowrap)
+			ret += fmt.Sprintf("%s.%s", falias, goTypeName)
 		}
-	}
 
+		switch tntype {
+		case TNT_EMPTYVALUE:
+			if t.tp.IsPointer() {
+				ret += "{}"
+			}
+		}
+	*/
 	return ret
 }
 
@@ -71,45 +70,47 @@ func (t *TypeConverter_Default) IsPointer() bool {
 }
 
 func (t *TypeConverter_Default) GenerateImport(g *GeneratorFile, varSrc string, varDest string, varError string) (checkError bool, err error) {
-	if !g.G().IsFileWrap(t.tp.FileDep) {
-		g.P(varDest, " = ", varSrc)
-		return false, nil
-	}
+	/*
+			if !g.G().IsFileWrap(t.tp.FileDep) {
+				g.P(varDest, " = ", varSrc)
+				return false, nil
+			}
 
-	var falias string
-	if !t.is_gowrap || !t.tp.FileDep.IsSamePackage(t.filedep) {
-		falias = g.FileDep(t.tp.FileDep, t.tp.Alias, t.is_gowrap) + "."
-	}
+			var falias string
+			if !t.is_gowrap || !t.tp.FileDep.IsSamePackage(t.filedep) {
+				//falias = g.FileDep(t.tp.FileDep, t.tp.Alias, t.is_gowrap) + "."
+			}
 
-	switch t.tp.Item.(type) {
-	case *fproto.EnumElement:
-		g.P(varDest, " = ", varSrc)
-		return false, nil
-	}
+			switch t.tp.Item.(type) {
+			case *fproto.EnumElement:
+				g.P(varDest, " = ", varSrc)
+				return false, nil
+			}
 
-	// get Go type name
-	goTypeName, _, _ := g.G().BuildTypeName(t.tp)
+			// get Go type name
+			goTypeName, _, _ := g.BuildTypeName(t.tp)
 
-	// varDest, err = goalias.MyStruct_Import(varSrc)
-	g.P(varDest, ", err = ", falias, goTypeName, "_Import(", varSrc, ")")
+			// varDest, err = goalias.MyStruct_Import(varSrc)
+			g.P(varDest, ", err = ", falias, goTypeName, "_Import(", varSrc, ")")
 
-	return true, nil
-}
+			return true, nil
+		}
 
-func (t *TypeConverter_Default) GenerateExport(g *GeneratorFile, varSrc string, varDest string, varError string) (checkError bool, err error) {
-	if !g.G().IsFileWrap(t.tp.FileDep) {
-		g.P(varDest, " = ", varSrc)
-		return false, nil
-	}
+		func (t *TypeConverter_Default) GenerateExport(g *GeneratorFile, varSrc string, varDest string, varError string) (checkError bool, err error) {
+			if !g.G().IsFileWrap(t.tp.FileDep) {
+				g.P(varDest, " = ", varSrc)
+				return false, nil
+			}
 
-	switch t.tp.Item.(type) {
-	case *fproto.EnumElement:
-		g.P(varDest, " = ", varSrc)
-		return false, nil
-	}
+			switch t.tp.Item.(type) {
+			case *fproto.EnumElement:
+				g.P(varDest, " = ", varSrc)
+				return false, nil
+			}
 
-	// varDest, err = MyStruct.Export()
-	g.P(varDest, ", err = ", varSrc, ".Export()")
+			// varDest, err = MyStruct.Export()
+			g.P(varDest, ", err = ", varSrc, ".Export()")
+	*/
 	return true, nil
 }
 
