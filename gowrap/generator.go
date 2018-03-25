@@ -221,53 +221,6 @@ func (g *Generator) GenerateServices() error {
 	return nil
 }
 
-// Return an array of scopes of the element, NOT including the element itself
-func (g *Generator) GetScope(element fproto.FProtoElement) []string {
-	var ret []string
-	isfirst := true
-	cur := element
-	for cur != nil {
-		switch el := cur.(type) {
-		case *fproto.MessageElement:
-			if !isfirst {
-				ret = append(ret, el.Name)
-			}
-			cur = el.Parent
-		case *fproto.EnumElement:
-			if !isfirst {
-				ret = append(ret, el.Name)
-			}
-			cur = el.Parent
-		case *fproto.OneOfFieldElement:
-			if !isfirst {
-				ret = append(ret, el.Name)
-			}
-			cur = el.Parent
-		case *fproto.EnumConstantElement:
-			if !isfirst {
-				ret = append(ret, el.Name)
-			}
-			cur = el.Parent
-		case *fproto.FieldElement:
-			// don't add to list
-			cur = el.Parent
-		case *fproto.MapFieldElement:
-			// don't add to list
-			cur = el.Parent
-		default:
-			cur = nil
-		}
-		isfirst = false
-	}
-
-	// reverse order
-	if ret != nil {
-		return fproto.ReverseStr(ret)
-	}
-
-	return ret
-}
-
 // Builds the message name.
 // Given the proto:
 // 		message A_msg { message B_test { string field; } }
@@ -275,13 +228,15 @@ func (g *Generator) GetScope(element fproto.FProtoElement) []string {
 // 		goName: AMsg_BTest
 // 		protoName: A_msg.B_test
 // 		protoScope: A_msg
-func (g *Generator) BuildMessageName(message *fproto.MessageElement) (goName string, protoName string, protoScope string) {
-	// Get the message scope on the current file as an array
-	scope := g.GetScope(message)
+func (g *Generator) BuildMessageName(message *fproto.MessageElement) (goName string, protoName string) {
+	// get the dep type
+	tp_message := g.dep.DepTypeFromElement(message)
+	if tp_message == nil {
+		panic("message type not found")
+	}
 
-	goName = fproto_wrap.CamelCaseSlice(append(scope, fproto_wrap.CamelCase(message.Name)))
-	protoName = strings.Join(append(scope, message.Name), ".")
-	protoScope = strings.Join(scope, ".")
+	goName = fproto_wrap.CamelCaseProto(tp_message.Name)
+	protoName = tp_message.Name
 
 	return
 }
@@ -304,7 +259,7 @@ func (g *Generator) generateMessage(message *fproto.MessageElement) error {
 	go_alias_ie := g.FImpExp().FileDep(nil, "", false)
 
 	// get the type names
-	msgGoName, msgProtoName, _ := g.BuildMessageName(message)
+	msgGoName, msgProtoName := g.BuildMessageName(message)
 
 	// CUSTOMIZER
 	cz := &wrapCustomizers{g.Customizers}
@@ -367,7 +322,7 @@ func (g *Generator) generateMessage(message *fproto.MessageElement) error {
 			// fieldname isSTRUCT_ONEOF
 			g.FMain().GenerateComment(xfld.Comment)
 
-			oneofGoName, _, _ := g.BuildOneOfName(xfld)
+			oneofGoName, _ := g.BuildOneOfName(xfld)
 
 			g.FMain().P(fldGoName, " ", oneofGoName, field_tag.OutputWithSpace())
 		}
@@ -463,7 +418,7 @@ func (g *Generator) generateMessage(message *fproto.MessageElement) error {
 			for _, oofld := range xfld.Fields {
 				switch xoofld := oofld.(type) {
 				case *fproto.FieldElement:
-					oneofFieldGoName, _, _ := g.BuildOneOfFieldName(xoofld)
+					oneofFieldGoName, _ := g.BuildOneOfFieldName(xoofld)
 
 					g.FImpExp().P("case *", go_alias_ie, ".", oneofFieldGoName, ":")
 					g.FImpExp().In()
@@ -575,7 +530,7 @@ func (g *Generator) generateMessage(message *fproto.MessageElement) error {
 			for _, oofld := range xfld.Fields {
 				switch xoofld := oofld.(type) {
 				case *fproto.FieldElement:
-					oneofFieldGoName, _, _ := g.BuildOneOfFieldName(xoofld)
+					oneofFieldGoName, _ := g.BuildOneOfFieldName(xoofld)
 
 					g.FImpExp().P("case *", oneofFieldGoName, ":")
 					g.FImpExp().In()
@@ -629,40 +584,44 @@ func (g *Generator) generateMessage(message *fproto.MessageElement) error {
 	return nil
 }
 
-func (g *Generator) BuildEnumName(enum *fproto.EnumElement) (goName string, protoName string, protoScope string) {
-	// Get the enum scope on the current file as an array
-	scope := g.GetScope(enum)
+func (g *Generator) BuildEnumName(enum *fproto.EnumElement) (goName string, protoName string) {
+	// get the dep type
+	tp_enum := g.dep.DepTypeFromElement(enum)
+	if tp_enum == nil {
+		panic("enum type not found")
+	}
 
-	goName = fproto_wrap.CamelCaseSlice(append(scope, fproto_wrap.CamelCase(enum.Name)))
-	protoName = strings.Join(append(scope, enum.Name), ".")
-	protoScope = strings.Join(scope, ".")
+	// Camel-cased name, with "." replaced by "_"
+	goName = fproto_wrap.CamelCaseProto(tp_enum.Name)
+
+	protoName = tp_enum.Name
 
 	return
 }
 
-func (g *Generator) BuildEnumConstantName(ec *fproto.EnumConstantElement) (goName string, protoName string, protoScope string) {
-	// Get the enum constant scope on the current file as an array
-	scope := g.GetScope(ec)
+func (g *Generator) BuildEnumConstantName(ec *fproto.EnumConstantElement) (goName string, protoName string) {
+	// get the dep type
+	tp_ec := g.dep.DepTypeFromElement(ec)
+	if tp_ec == nil {
+		panic("enum constant type not found")
+	}
 
-	// constants from root enums are named differently
-	var ecbasename string
-	if len(scope) <= 1 {
-		ecbasename = fproto_wrap.CamelCaseSlice(scope)
-	} else {
-		// ignore the last scope
-		ecbasename = fproto_wrap.CamelCaseSlice(scope[:len(scope)-1])
+	// Skip up to 2 parents if available (constants from root enums are named differently).
+	tp_parent, _ := tp_ec.SkipParents(2)
+	if tp_parent == nil {
+		panic("enum constant parent type not found")
 	}
 
 	// enum constant name isn't camel-cased
-	goName = ecbasename + "_" + ec.Name
-	protoName = strings.Join(append(scope, ec.Name), ".")
-	protoScope = strings.Join(scope, ".")
+	goName = fproto_wrap.CamelCaseProto(tp_parent.Name) + "_" + ec.Name
+
+	protoName = tp_ec.Name
 
 	return
 }
 
 func (g *Generator) generateEnum(enum *fproto.EnumElement) error {
-	enGoName, enProtoName, _ := g.BuildEnumName(enum)
+	enGoName, enProtoName := g.BuildEnumName(enum)
 
 	// build aliases to the original type
 	go_alias := g.FMain().FileDep(nil, "", false)
@@ -681,7 +640,7 @@ func (g *Generator) generateEnum(enum *fproto.EnumElement) error {
 
 	for _, ec := range enum.EnumConstants {
 		// MyEnumConstant MyEnum = go_package.MyEnumConstant
-		ecGoName, _, _ := g.BuildEnumConstantName(ec)
+		ecGoName, _ := g.BuildEnumConstantName(ec)
 
 		g.FMain().GenerateComment(ec.Comment)
 
@@ -703,27 +662,38 @@ func (g *Generator) generateEnum(enum *fproto.EnumElement) error {
 	return nil
 }
 
-func (g *Generator) BuildOneOfName(oneof *fproto.OneOfFieldElement) (goName string, protoName string, protoScope string) {
-	// Get the oneof scope on the current file as an array
-	scope := g.GetScope(oneof)
+func (g *Generator) BuildOneOfName(oneof *fproto.OneOfFieldElement) (goName string, protoName string) {
+	// get the dep type
+	tp_oneof := g.dep.DepTypeFromElement(oneof)
+	if tp_oneof == nil {
+		panic("oneof type not found")
+	}
 
 	// oneof have an "is" prefix
-	goName = "is" + fproto_wrap.CamelCaseSlice(append(scope, fproto_wrap.CamelCase(oneof.Name)))
-	protoName = strings.Join(append(scope, oneof.Name), ".")
-	protoScope = strings.Join(scope, ".")
+	goName = "is" + fproto_wrap.CamelCaseProtoElement(tp_oneof.Name)
+
+	protoName = tp_oneof.Name
 
 	return
 }
 
-func (g *Generator) BuildOneOfFieldName(oneoffield fproto.FieldElementTag) (goName string, protoName string, protoScope string) {
-	// Get the message scope on the current file as an array
-	scope := g.GetScope(oneoffield)
-	parent_scope := g.GetScope(oneoffield.ParentElement())
+func (g *Generator) BuildOneOfFieldName(oneoffield fproto.FieldElementTag) (goName string, protoName string) {
+	// get the dep type
+	tp_fld := g.dep.DepTypeFromElement(oneoffield)
+	if tp_fld == nil {
+		panic("oneof field type not found")
+	}
 
-	// the Go name uses the parent as scope
-	goName = fproto_wrap.CamelCaseSlice(append(parent_scope, fproto_wrap.CamelCase(oneoffield.FieldName())))
-	protoName = strings.Join(append(scope, oneoffield.FieldName()), ".")
-	protoScope = strings.Join(scope, ".")
+	// skip 2 parents to the message
+	tp_msg, _ := tp_fld.SkipParents(2)
+	if tp_msg == nil {
+		panic("oneof field message type not found")
+	}
+
+	// the Go name uses the message as the scope
+	goName = fproto_wrap.CamelCaseProtoElement(tp_msg.Name) + "_" + fproto_wrap.CamelCase(oneoffield.FieldName())
+
+	protoName = tp_fld.Name
 
 	return
 }
@@ -735,7 +705,7 @@ func (g *Generator) generateOneOf(oneof *fproto.OneOfFieldElement) error {
 	// build aliases to the original type
 	go_alias_ie := g.FImpExp().FileDep(nil, "", false)
 
-	ooGoName, ooProtoName, _ := g.BuildOneOfName(oneof)
+	ooGoName, ooProtoName := g.BuildOneOfName(oneof)
 
 	// type isSTRUCT_ONEOF interface {
 	//		isSTRUCT_ONEOF()
@@ -769,7 +739,7 @@ func (g *Generator) generateOneOf(oneof *fproto.OneOfFieldElement) error {
 			// 		ONEOFFIELD fieldtype
 			// }
 
-			oneofFieldGoName, oneofFieldProtoName, _ := g.BuildOneOfFieldName(xoofld)
+			oneofFieldGoName, oneofFieldProtoName := g.BuildOneOfFieldName(xoofld)
 
 			g.FMain().P("type ", oneofFieldGoName, " struct {")
 			g.FMain().In()
@@ -868,19 +838,19 @@ func (g *Generator) BuildTypeName(dt *fdep.DepType) (goName string, protoName st
 	if dt.Item != nil {
 		switch item := dt.Item.(type) {
 		case *fproto.MessageElement:
-			goName, protoName, protoScope = g.BuildMessageName(item)
+			goName, protoName = g.BuildMessageName(item)
 			return
 		case *fproto.EnumElement:
-			goName, protoName, protoScope = g.BuildEnumName(item)
+			goName, protoName = g.BuildEnumName(item)
 			return
 		case *fproto.OneOfFieldElement:
-			goName, protoName, protoScope = g.BuildOneOfName(item)
+			goName, protoName = g.BuildOneOfName(item)
 			return
 		case fproto.FieldElementTag:
 			// if the parent is a oneof, call a different function
 			switch item.ParentElement().(type) {
 			case *fproto.EnumElement:
-				goName, protoName, protoScope = g.BuildOneOfFieldName(item)
+				goName, protoName = g.BuildOneOfFieldName(item)
 			default:
 				goName, protoName = g.BuildFieldName(item)
 				protoScope = ""

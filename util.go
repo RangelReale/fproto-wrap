@@ -77,6 +77,15 @@ func CamelCaseProto(s string) string {
 	return CamelCaseSlice(strings.Split(s, "."))
 }
 
+// CamelCaseProtoElement is like CamelCaseProto, but camelcase each item separatelly
+func CamelCaseProtoElement(s string) string {
+	var cc []string
+	for _, c := range strings.Split(s, ".") {
+		cc = append(cc, CamelCase(c))
+	}
+	return strings.Join(cc, "_")
+}
+
 // BaseName returns the last path element of the name, with the last dotted suffix removed.
 // (e.g. the filename without extension)
 func BaseName(name string) string {
