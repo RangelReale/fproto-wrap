@@ -1,4 +1,4 @@
-package fproto_wrap_uuid
+package fproto_phpwrap_uuid
 
 import (
 	"github.com/RangelReale/fdep"

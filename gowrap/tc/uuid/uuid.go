@@ -1,4 +1,4 @@
-package fproto_wrap_uuid
+package fproto_gowrap_uuid
 
 import (
 	"fmt"

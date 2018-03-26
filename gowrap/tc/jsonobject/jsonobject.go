@@ -1,4 +1,4 @@
-package fproto_wrap_jsonobject
+package fproto_gowrap_jsonobject
 
 import (
 	"github.com/RangelReale/fdep"

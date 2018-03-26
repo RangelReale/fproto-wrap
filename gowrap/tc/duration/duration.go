@@ -1,4 +1,4 @@
-package fproto_wrap_duration
+package fproto_gowrap_duration
 
 import (
 	"fmt"
