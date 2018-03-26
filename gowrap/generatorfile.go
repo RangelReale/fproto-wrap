@@ -13,9 +13,9 @@ import (
 	"sort"
 	"strings"
 
+	"github.com/RangelReale/fdep"
 	"github.com/RangelReale/fproto"
 	"github.com/RangelReale/fproto-wrap"
-	"github.com/RangelReale/fproto/fdep"
 )
 
 // A single generated output file

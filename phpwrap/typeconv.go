@@ -1,6 +1,6 @@
 package fproto_phpwrap
 
-import "github.com/RangelReale/fproto/fdep"
+import "github.com/RangelReale/fdep"
 
 type TypeConverterTypeNameType int
 

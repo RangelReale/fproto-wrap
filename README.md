@@ -4,7 +4,7 @@ Repository for protobuf wrapper generators.
 
 This should serve as a repository of useful default types, and also for generators for various programming languages.
 
-The generators should be made in Go using my other library [fdep](https://github.com/RangelReale/fproto/tree/master/fdep), but the
+The generators should be made in Go using my other library [fdep](https://github.com/RangelReale/fdep), but the
 target of the generation can be any programming language.
 
 Currently there is only a Golang wrapper generator.

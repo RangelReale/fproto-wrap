@@ -3,8 +3,8 @@ package fproto_gowrap
 import (
 	"fmt"
 
+	"github.com/RangelReale/fdep"
 	"github.com/RangelReale/fproto"
-	"github.com/RangelReale/fproto/fdep"
 )
 
 const (

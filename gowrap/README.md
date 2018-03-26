@@ -314,7 +314,7 @@ import (
 	"github.com/RangelReale/fproto-wrap/gowrap/cz/jsontag"
 	"github.com/RangelReale/fproto-wrap/gowrap/tc/time"
 	"github.com/RangelReale/fproto-wrap/gowrap/tc/uuid"
-	"github.com/RangelReale/fproto/fdep"
+	"github.com/RangelReale/fdep"
 )
 
 func main() {

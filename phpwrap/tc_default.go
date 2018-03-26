@@ -1,7 +1,7 @@
 package fproto_phpwrap
 
 import (
-	"github.com/RangelReale/fproto/fdep"
+	"github.com/RangelReale/fdep"
 )
 
 const (

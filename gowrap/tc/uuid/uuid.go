@@ -3,8 +3,8 @@ package fproto_wrap_uuid
 import (
 	"fmt"
 
+	"github.com/RangelReale/fdep"
 	"github.com/RangelReale/fproto-wrap/gowrap"
-	"github.com/RangelReale/fproto/fdep"
 )
 
 const (

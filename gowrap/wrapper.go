@@ -1,7 +1,7 @@
 package fproto_gowrap
 
 import (
-	"github.com/RangelReale/fproto/fdep"
+	"github.com/RangelReale/fdep"
 )
 
 type WrapperFile struct {

@@ -1,8 +1,8 @@
 package fproto_wrap_jsonobject
 
 import (
+	"github.com/RangelReale/fdep"
 	"github.com/RangelReale/fproto-wrap/gowrap"
-	"github.com/RangelReale/fproto/fdep"
 )
 
 const (

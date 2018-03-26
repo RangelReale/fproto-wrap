@@ -1,6 +1,6 @@
 package fproto_phpwrap
 
-import "github.com/RangelReale/fproto/fdep"
+import "github.com/RangelReale/fdep"
 
 // Interface to customize the PHP namespace name for a filedep
 type NSSource interface {
