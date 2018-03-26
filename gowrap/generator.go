@@ -969,10 +969,13 @@ func (g *Generator) GoWrapPackage(filedep *fdep.FileDep) string {
 			return o.Value.String()
 		}
 	}
+
+	// prepend "fpwrap"
+
 	for _, o := range filedep.ProtoFile.Options {
 		if o.Name == "go_package" {
-			return o.Value.String()
+			return path.Join("fpwrap", o.Value.String())
 		}
 	}
-	return path.Dir(filedep.FilePath)
+	return path.Join("fpwrap", path.Dir(filedep.FilePath))
 }
