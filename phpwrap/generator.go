@@ -709,6 +709,9 @@ func (g *Generator) generateFieldGetterSetter(gf *GeneratorFile, parent_type *fd
 
 		typeconv := g.GetTypeConverter(tp_fld)
 		wrapFieldTypeName := typeconv.TypeName(gf, TNT_NS_WRAPNAME)
+		if xfld.Repeated {
+			wrapFieldTypeName += "[]"
+		}
 
 		gf.GenerateFieldComment(nil, []string{
 			fmt.Sprintf("@return %s", wrapFieldTypeName),
