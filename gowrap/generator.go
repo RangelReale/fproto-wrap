@@ -186,8 +186,8 @@ func (g *Generator) Generate() error {
 
 // Generates the protobuf enums
 func (g *Generator) GenerateEnums() error {
-	for _, enum := range g.filedep.ProtoFile.Enums {
-		err := g.generateEnum(enum)
+	for _, enum := range g.filedep.ProtoFile.CollectEnums() {
+		err := g.generateEnum(enum.(*fproto.EnumElement))
 		if err != nil {
 			return err
 		}
@@ -197,8 +197,8 @@ func (g *Generator) GenerateEnums() error {
 
 // Generates the protobuf messages
 func (g *Generator) GenerateMessages() error {
-	for _, message := range g.filedep.ProtoFile.Messages {
-		err := g.generateMessage(message)
+	for _, message := range g.filedep.ProtoFile.CollectMessages() {
+		err := g.generateMessage(message.(*fproto.MessageElement))
 		if err != nil {
 			return err
 		}
@@ -212,8 +212,8 @@ func (g *Generator) GenerateServices() error {
 		return nil
 	}
 
-	for _, svc := range g.filedep.ProtoFile.Services {
-		err := g.ServiceGen.GenerateService(g, svc)
+	for _, svc := range g.filedep.ProtoFile.CollectServices() {
+		err := g.ServiceGen.GenerateService(g, svc.(*fproto.ServiceElement))
 		if err != nil {
 			return err
 		}
@@ -554,14 +554,6 @@ func (g *Generator) generateMessage(message *fproto.MessageElement) error {
 
 	g.FImpExp().P()
 
-	// Enums
-	for _, enum := range message.Enums {
-		err := g.generateEnum(enum)
-		if err != nil {
-			return err
-		}
-	}
-
 	// Oneofs
 	for _, fld := range message.Fields {
 		switch xfld := fld.(type) {
@@ -570,14 +562,6 @@ func (g *Generator) generateMessage(message *fproto.MessageElement) error {
 			if err != nil {
 				return err
 			}
-		}
-	}
-
-	// Submessages
-	for _, submsg := range message.Messages {
-		err := g.generateMessage(submsg)
-		if err != nil {
-			return err
 		}
 	}
 
