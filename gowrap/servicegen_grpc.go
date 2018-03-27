@@ -174,6 +174,12 @@ func (s *ServiceGen_gRPC) GenerateService(g *Generator, svc *fproto.ServiceEleme
 				s.generateErrorCheck(g, defretvalue)
 			}
 
+			g.FService().P("if wreq == nil {")
+			g.FService().In()
+			g.FService().P("wreq = ", tcgo_req.TypeName(g.FService(), TNT_EMPTYVALUE))
+			g.FService().Out()
+			g.FService().P("}")
+
 			g.FService().P()
 		}
 
