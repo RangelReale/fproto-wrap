@@ -1,19 +1,19 @@
-package fproto_gowrap
+package fproto_phpwrap
 
 type TypeNameType int
 
 const (
 	TNT_TYPENAME TypeNameType = iota
-	TNT_FIELD_DEFINITION
-	TNT_EMPTYVALUE
-	TNT_EMPTYORNILVALUE
-	TNT_POINTER
+	TNT_NS_TYPENAME
+
+	//TNT_NS_SOURCENAME
+	//TNT_NS_WRAPNAME
 )
 
 type TypeNamer interface {
 	// Gets the type name in relation to the current file
 	TypeName(g *GeneratorFile, tntype TypeNameType) string
 
-	// Returns if the underlining type is a pointer
-	IsPointer() bool
+	// Returns if the underlining type is scalar
+	IsScalar() bool
 }

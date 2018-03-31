@@ -417,13 +417,12 @@ func (g *Generator) GenerateMessage(message *fproto.MessageElement) error {
 		switch xfld := fld.(type) {
 		case *fproto.FieldElement:
 			// Get field type
-			tp_fld, err := tp_msg.GetType(xfld.Type)
+			tinfo, err := g.GetTypeInfoFromParent(tp_msg, xfld.Type)
 			if err != nil {
 				return err
 			}
 
-			typeconv := g.GetTypeConverter(tp_fld)
-			wrapFieldTypeName := typeconv.TypeName(gf, TNT_NS_WRAPNAME)
+			wrapFieldTypeName := tinfo.Converter().TypeName(gf, TNT_NS_TYPENAME)
 
 			gf.GenerateFieldComment(fld, []string{
 				fmt.Sprintf("@var %s", wrapFieldTypeName),
@@ -432,20 +431,18 @@ func (g *Generator) GenerateMessage(message *fproto.MessageElement) error {
 			gf.P("private $", fldname, " = null;")
 		case *fproto.MapFieldElement:
 			// Get field type
-			tp_fld, err := tp_msg.GetType(xfld.Type)
-			if err != nil {
-				return err
-			}
-			tp_keyfld, err := tp_msg.GetType(xfld.KeyType)
+			tinfo, err := g.GetTypeInfoFromParent(tp_msg, xfld.Type)
 			if err != nil {
 				return err
 			}
 
-			typeconv := g.GetTypeConverter(tp_fld)
-			typeconv_key := g.GetTypeConverter(tp_keyfld)
+			tinfokey, err := g.GetTypeInfoFromParent(tp_msg, xfld.KeyType)
+			if err != nil {
+				return err
+			}
 
-			wrapFieldTypeName := typeconv.TypeName(gf, TNT_NS_WRAPNAME)
-			wrapKeyFieldTypeName := typeconv_key.TypeName(gf, TNT_NS_WRAPNAME)
+			wrapFieldTypeName := tinfo.Converter().TypeName(gf, TNT_NS_TYPENAME)
+			wrapKeyFieldTypeName := tinfokey.Converter().TypeName(gf, TNT_NS_TYPENAME)
 
 			gf.GenerateFieldComment(fld, []string{
 				fmt.Sprintf("@var %s[] key => %s", wrapFieldTypeName, wrapKeyFieldTypeName),
@@ -466,13 +463,12 @@ func (g *Generator) GenerateMessage(message *fproto.MessageElement) error {
 				switch xoofld := oofld.(type) {
 				case *fproto.FieldElement:
 					// Get field type
-					tp_oofld, err := tp_msg.GetType(xoofld.Type)
+					ootinfo, err := g.GetTypeInfoFromParent(tp_msg, xoofld.Type)
 					if err != nil {
 						return err
 					}
 
-					ootypeconv := g.GetTypeConverter(tp_oofld)
-					wrapOOFieldTypeName := ootypeconv.TypeName(gf, TNT_NS_WRAPNAME)
+					wrapOOFieldTypeName := ootinfo.Converter().TypeName(gf, TNT_NS_TYPENAME)
 
 					if xoofld.Repeated {
 						wrapOOFieldTypeName += "[]"
@@ -485,20 +481,17 @@ func (g *Generator) GenerateMessage(message *fproto.MessageElement) error {
 					gf.P("private $", oofldname, " = null;")
 				case *fproto.MapFieldElement:
 					// Get field type
-					tp_oofld, err := tp_msg.GetType(xoofld.Type)
+					ootinfo, err := g.GetTypeInfoFromParent(tp_msg, xoofld.Type)
 					if err != nil {
 						return err
 					}
-					tp_ookeyfld, err := tp_msg.GetType(xoofld.KeyType)
+					ootinfokey, err := g.GetTypeInfoFromParent(tp_msg, xoofld.KeyType)
 					if err != nil {
 						return err
 					}
 
-					ootypeconv := g.GetTypeConverter(tp_oofld)
-					ookeytypeconv := g.GetTypeConverter(tp_ookeyfld)
-
-					wrapOOFieldTypeName := ootypeconv.TypeName(gf, TNT_NS_WRAPNAME)
-					wrapOOKeyFieldTypeName := ookeytypeconv.TypeName(gf, TNT_NS_WRAPNAME)
+					wrapOOFieldTypeName := ootinfo.Converter().TypeName(gf, TNT_NS_TYPENAME)
+					wrapOOKeyFieldTypeName := ootinfokey.Converter().TypeName(gf, TNT_NS_TYPENAME)
 
 					gf.GenerateFieldComment(oofld, []string{
 						fmt.Sprintf("@var %s[] key => %s", wrapOOFieldTypeName, wrapOOKeyFieldTypeName),
@@ -702,13 +695,12 @@ func (g *Generator) generateFieldGetterSetter(gf *GeneratorFile, parent_type *fd
 	switch xfld := fld.(type) {
 	case *fproto.FieldElement:
 		// Get field type
-		tp_fld, err := parent_type.GetType(xfld.Type)
+		tinfo, err := g.GetTypeInfoFromParent(parent_type, xfld.Type)
 		if err != nil {
 			return err
 		}
 
-		typeconv := g.GetTypeConverter(tp_fld)
-		wrapFieldTypeName := typeconv.TypeName(gf, TNT_NS_WRAPNAME)
+		wrapFieldTypeName := tinfo.Converter().TypeName(gf, TNT_NS_TYPENAME)
 		if xfld.Repeated {
 			wrapFieldTypeName += "[]"
 		}
@@ -755,20 +747,18 @@ func (g *Generator) generateFieldGetterSetter(gf *GeneratorFile, parent_type *fd
 		gf.P()
 	case *fproto.MapFieldElement:
 		// Get field type
-		tp_fld, err := parent_type.GetType(xfld.Type)
-		if err != nil {
-			return err
-		}
-		tp_keyfld, err := parent_type.GetType(xfld.KeyType)
+		tinfo, err := g.GetTypeInfoFromParent(parent_type, xfld.Type)
 		if err != nil {
 			return err
 		}
 
-		typeconv := g.GetTypeConverter(tp_fld)
-		typeconv_key := g.GetTypeConverter(tp_keyfld)
+		tinfokey, err := g.GetTypeInfoFromParent(parent_type, xfld.KeyType)
+		if err != nil {
+			return err
+		}
 
-		wrapFieldTypeName := typeconv.TypeName(gf, TNT_NS_WRAPNAME)
-		wrapKeyFieldTypeName := typeconv_key.TypeName(gf, TNT_NS_WRAPNAME)
+		wrapFieldTypeName := tinfo.Converter().TypeName(gf, TNT_NS_TYPENAME)
+		wrapKeyFieldTypeName := tinfokey.Converter().TypeName(gf, TNT_NS_TYPENAME)
 
 		gf.GenerateFieldComment(fld, []string{
 			fmt.Sprintf("@return %s[] key => %s", wrapFieldTypeName, wrapKeyFieldTypeName),
@@ -846,14 +836,12 @@ func (g *Generator) generateFieldImport(gf *GeneratorFile, parent_type *fdep.Dep
 	switch xfld := fld.(type) {
 	case *fproto.FieldElement:
 		// Get field type
-		tp_fld, err := parent_type.GetType(xfld.Type)
+		tinfo, err := g.GetTypeInfoFromParent(parent_type, xfld.Type)
 		if err != nil {
 			return err
 		}
 
-		typeconv := g.GetTypeConverter(tp_fld)
-
-		if !typeconv.IsScalar() {
+		if !tinfo.Converter().IsScalar() {
 			gf.P("if ($source->", fldgetter, "() !== null) {")
 			gf.In()
 		}
@@ -872,7 +860,7 @@ func (g *Generator) generateFieldImport(gf *GeneratorFile, parent_type *fdep.Dep
 			dest_field = "$msi"
 		}
 
-		generated, err := typeconv.GenerateImport(gf, source_field, dest_field, "error")
+		generated, err := tinfo.Converter().GenerateImport(gf, source_field, dest_field, "error")
 		if err != nil {
 			return err
 		}
@@ -895,20 +883,18 @@ func (g *Generator) generateFieldImport(gf *GeneratorFile, parent_type *fdep.Dep
 
 		gf.P("$this->", fldsetter, "(", varName, ");")
 
-		if !typeconv.IsScalar() {
+		if !tinfo.Converter().IsScalar() {
 			gf.Out()
 			gf.P("}")
 		}
 	case *fproto.MapFieldElement:
 		// Get map field type
-		tp_fld, err := parent_type.GetType(xfld.Type)
+		tinfo, err := g.GetTypeInfoFromParent(parent_type, xfld.Type)
 		if err != nil {
 			return err
 		}
 
-		typeconv := g.GetTypeConverter(tp_fld)
-
-		if !typeconv.IsScalar() {
+		if !tinfo.Converter().IsScalar() {
 			gf.P("if ($source->", fldgetter, "() !== null) {")
 			gf.In()
 		}
@@ -920,7 +906,7 @@ func (g *Generator) generateFieldImport(gf *GeneratorFile, parent_type *fdep.Dep
 		gf.P("foreach ($source->", fldgetter, "() as $msidx => $ms) {")
 		gf.In()
 
-		generated, err := typeconv.GenerateImport(gf, "$ms", "$msi", "error")
+		generated, err := tinfo.Converter().GenerateImport(gf, "$ms", "$msi", "error")
 		if err != nil {
 			return err
 		}
@@ -936,7 +922,7 @@ func (g *Generator) generateFieldImport(gf *GeneratorFile, parent_type *fdep.Dep
 
 		gf.P("$this->", fldsetter, "(", varName, ");")
 
-		if !typeconv.IsScalar() {
+		if !tinfo.Converter().IsScalar() {
 			gf.Out()
 			gf.P("}")
 		}
@@ -975,14 +961,12 @@ func (g *Generator) generateFieldExport(gf *GeneratorFile, parent_type *fdep.Dep
 
 	switch xfld := fld.(type) {
 	case *fproto.FieldElement:
-		tp_fld, err := parent_type.GetType(xfld.Type)
+		tinfo, err := g.GetTypeInfoFromParent(parent_type, xfld.Type)
 		if err != nil {
 			return err
 		}
 
-		typeconv := g.GetTypeConverter(tp_fld)
-
-		if !typeconv.IsScalar() {
+		if !tinfo.Converter().IsScalar() {
 			gf.P("if ($this->", fldname, " !== null) {")
 			gf.In()
 		}
@@ -1001,7 +985,7 @@ func (g *Generator) generateFieldExport(gf *GeneratorFile, parent_type *fdep.Dep
 			dest_field = "$msi"
 		}
 
-		generated, err := typeconv.GenerateExport(gf, source_field, dest_field, "error")
+		generated, err := tinfo.Converter().GenerateExport(gf, source_field, dest_field, "error")
 		if err != nil {
 			return err
 		}
@@ -1024,18 +1008,16 @@ func (g *Generator) generateFieldExport(gf *GeneratorFile, parent_type *fdep.Dep
 
 		gf.P("$ret->", fldsetter, "(", varName, ");")
 
-		if !typeconv.IsScalar() {
+		if !tinfo.Converter().IsScalar() {
 			gf.Out()
 			gf.P("}")
 		}
 
 	case *fproto.MapFieldElement:
-		tp_fld, err := parent_type.GetType(xfld.Type)
+		tinfo, err := g.GetTypeInfoFromParent(parent_type, xfld.Type)
 		if err != nil {
 			return err
 		}
-
-		typeconv := g.GetTypeConverter(tp_fld)
 
 		gf.P("if ($this->", fldname, " !== null) {")
 		gf.In()
@@ -1047,7 +1029,7 @@ func (g *Generator) generateFieldExport(gf *GeneratorFile, parent_type *fdep.Dep
 		gf.P("foreach ($this->", fldname, " as $msidx => $ms) {")
 		gf.In()
 
-		generated, err := typeconv.GenerateExport(gf, "$ms", "$msi", "error")
+		generated, err := tinfo.Converter().GenerateExport(gf, "$ms", "$msi", "error")
 		if err != nil {
 			return err
 		}
@@ -1112,7 +1094,7 @@ func (g *Generator) GenerateServices() error {
 }
 
 // Get type converter for type
-func (g *Generator) getTypeConv(tp *fdep.DepType) TypeConverter {
+func (g *Generator) findTypeConv(tp *fdep.DepType) TypeConverter {
 	for _, tcp := range g.TypeConverters {
 		tc := tcp.GetTypeConverter(tp)
 		if tc != nil {
@@ -1122,17 +1104,42 @@ func (g *Generator) getTypeConv(tp *fdep.DepType) TypeConverter {
 	return nil
 }
 
-// Get gowrap type
-// The parameters MUST be protobuf names
+// Gets the type for the source protoc-gen-go generated names
+func (g *Generator) GetTypeSource(tp *fdep.DepType) TypeNamer {
+	if tp.IsScalar() {
+		return &TypeNamer_Scalar{tp: tp}
+	} else {
+		return &TypeNamer_Source{tp: tp}
+	}
+}
+
+// Gets the type for the phpwrap converter
 func (g *Generator) GetTypeConverter(tp *fdep.DepType) TypeConverter {
 	if tp.IsScalar() {
 		return &TypeConverter_Scalar{tp}
 	} else {
-		if tc := g.getTypeConv(tp); tc != nil {
+		if tc := g.findTypeConv(tp); tc != nil {
 			return tc
 		}
 		return &TypeConverter_Default{g, tp, g.filedep}
 	}
+}
+
+// Get both source and converter types.
+func (g *Generator) GetTypeInfo(tp *fdep.DepType) TypeInfo {
+	return &TypeInfo_Default{
+		source:    g.GetTypeSource(tp),
+		converter: g.GetTypeConverter(tp),
+	}
+}
+
+// Get both source and converter types from a parent and a type name.
+func (g *Generator) GetTypeInfoFromParent(parent_tp *fdep.DepType, atype string) (TypeInfo, error) {
+	tp, err := parent_tp.GetType(atype)
+	if err != nil {
+		return nil, err
+	}
+	return g.GetTypeInfo(tp), nil
 }
 
 // Returns the source and wrapped namespace.
@@ -1164,4 +1171,11 @@ func (g *Generator) PhpWrapNS(filedep *fdep.FileDep) (sourceNS string, wrapNS st
 
 	wrapPath = path.Join(strings.Split(wrapNS, "\\")...)
 	return
+}
+
+func (g *Generator) IsWrap(tp *fdep.DepType) bool {
+	if !g.IsFileWrap(tp.FileDep) || !tp.IsPointer() || tp.FileDep.DepType != fdep.DepType_Own {
+		return false
+	}
+	return true
 }

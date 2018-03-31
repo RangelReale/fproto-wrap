@@ -46,7 +46,7 @@ func (t *TypeConverter_UUID) TCID() string {
 	return TCID_UUID
 }
 
-func (t *TypeConverter_UUID) TypeName(g *fproto_gowrap.GeneratorFile, tntype fproto_gowrap.TypeConverterTypeNameType) string {
+func (t *TypeConverter_UUID) TypeName(g *fproto_gowrap.GeneratorFile, tntype fproto_gowrap.TypeNameType) string {
 	alias := g.Dep("github.com/RangelReale/go.uuid", "uuid")
 
 	switch tntype {
@@ -97,7 +97,7 @@ func (t *TypeConverter_NullUUID) TCID() string {
 	return TCID_NULLUUID
 }
 
-func (t *TypeConverter_NullUUID) TypeName(g *fproto_gowrap.GeneratorFile, tntype fproto_gowrap.TypeConverterTypeNameType) string {
+func (t *TypeConverter_NullUUID) TypeName(g *fproto_gowrap.GeneratorFile, tntype fproto_gowrap.TypeNameType) string {
 	alias := g.Dep("github.com/RangelReale/go.uuid", "uuid")
 
 	switch tntype {

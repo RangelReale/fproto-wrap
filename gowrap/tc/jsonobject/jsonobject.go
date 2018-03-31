@@ -38,7 +38,7 @@ func (t *TypeConverter_JSONObject) TCID() string {
 	return TCID_JSONOBJECT
 }
 
-func (t *TypeConverter_JSONObject) TypeName(g *fproto_gowrap.GeneratorFile, tntype fproto_gowrap.TypeConverterTypeNameType) string {
+func (t *TypeConverter_JSONObject) TypeName(g *fproto_gowrap.GeneratorFile, tntype fproto_gowrap.TypeNameType) string {
 	return "interface{}"
 }
 

@@ -2,36 +2,16 @@ package fproto_phpwrap
 
 import "github.com/RangelReale/fdep"
 
-type TypeConverterTypeNameType int
-
-const (
-	TNT_TYPENAME TypeConverterTypeNameType = iota
-	TNT_NS_SOURCENAME
-	TNT_NS_WRAPNAME
-
-	/*
-		TNT_TYPENAME TypeConverterTypeNameType = iota
-		TNT_FIELD_DEFINITION
-		TNT_EMPTYVALUE
-		TNT_EMPTYORNILVALUE
-		TNT_POINTER
-	*/
-)
-
 type TypeConverterPlugin interface {
 	// Returns a type converter for the type
 	GetTypeConverter(tp *fdep.DepType) TypeConverter
 }
 
 type TypeConverter interface {
+	TypeNamer
+
 	// Returns an UUID string uniquelly identifying this type converter (without {})
 	TCID() string
-
-	// Gets the type name in relation to the current file
-	TypeName(g *GeneratorFile, tntype TypeConverterTypeNameType) string
-
-	// Returns if the underlining type is scalar
-	IsScalar() bool
 
 	// Generates code to import the type from the Go protobuf generated type
 	GenerateImport(g *GeneratorFile, varSrc string, varDest string, varError string) (generated bool, err error)

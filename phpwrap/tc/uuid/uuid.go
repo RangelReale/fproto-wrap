@@ -44,13 +44,11 @@ func (t *TypeConverter_UUID) TCID() string {
 	return TCID_UUID
 }
 
-func (t *TypeConverter_UUID) TypeName(g *fproto_phpwrap.GeneratorFile, tntype fproto_phpwrap.TypeConverterTypeNameType) string {
+func (t *TypeConverter_UUID) TypeName(g *fproto_phpwrap.GeneratorFile, tntype fproto_phpwrap.TypeNameType) string {
 
 	switch tntype {
-	case fproto_phpwrap.TNT_NS_WRAPNAME:
+	case fproto_phpwrap.TNT_NS_TYPENAME:
 		return "\\Ramsey\\Uuid\\Uuid"
-	case fproto_phpwrap.TNT_NS_SOURCENAME:
-		return "\\Fproto_wrap\\UUID"
 	}
 
 	return "Uuid"
@@ -85,13 +83,11 @@ func (t *TypeConverter_NullUUID) TCID() string {
 	return TCID_UUID
 }
 
-func (t *TypeConverter_NullUUID) TypeName(g *fproto_phpwrap.GeneratorFile, tntype fproto_phpwrap.TypeConverterTypeNameType) string {
+func (t *TypeConverter_NullUUID) TypeName(g *fproto_phpwrap.GeneratorFile, tntype fproto_phpwrap.TypeNameType) string {
 
 	switch tntype {
-	case fproto_phpwrap.TNT_NS_WRAPNAME:
+	case fproto_phpwrap.TNT_NS_TYPENAME:
 		return "\\Ramsey\\Uuid\\Uuid"
-	case fproto_phpwrap.TNT_NS_SOURCENAME:
-		return "\\Fproto_wrap\\UUID"
 	}
 
 	return "Uuid"

@@ -38,7 +38,7 @@ func (t *TypeConverter_Time) TCID() string {
 	return TCID_TIME
 }
 
-func (t *TypeConverter_Time) TypeName(g *fproto_gowrap.GeneratorFile, tntype fproto_gowrap.TypeConverterTypeNameType) string {
+func (t *TypeConverter_Time) TypeName(g *fproto_gowrap.GeneratorFile, tntype fproto_gowrap.TypeNameType) string {
 	alias := g.Dep("time", "time")
 	return fmt.Sprintf("%s.%s", alias, "Time")
 }
@@ -75,7 +75,7 @@ func (t *TypeConverter_NullTime) TCID() string {
 	return TCID_NULLTIME
 }
 
-func (t *TypeConverter_NullTime) TypeName(g *fproto_gowrap.GeneratorFile, tntype fproto_gowrap.TypeConverterTypeNameType) string {
+func (t *TypeConverter_NullTime) TypeName(g *fproto_gowrap.GeneratorFile, tntype fproto_gowrap.TypeNameType) string {
 	alias := g.Dep("github.com/RangelReale/fproto-wrap/gowrap/tc/time/ptypes", "time_ptypes")
 	return fmt.Sprintf("%s.%s", alias, "NullTime")
 }

@@ -32,7 +32,7 @@ func (t *TypeConverter_Duration) TCID() string {
 	return TCID_DURATION
 }
 
-func (t *TypeConverter_Duration) TypeName(g *fproto_gowrap.GeneratorFile, tntype fproto_gowrap.TypeConverterTypeNameType) string {
+func (t *TypeConverter_Duration) TypeName(g *fproto_gowrap.GeneratorFile, tntype fproto_gowrap.TypeNameType) string {
 	alias := g.Dep("time", "time")
 	return fmt.Sprintf("%s.%s", alias, "Duration")
 }

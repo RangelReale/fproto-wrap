@@ -42,13 +42,11 @@ func (t *TypeConverter_Time) TCID() string {
 	return TCID_TIME
 }
 
-func (t *TypeConverter_Time) TypeName(g *fproto_phpwrap.GeneratorFile, tntype fproto_phpwrap.TypeConverterTypeNameType) string {
+func (t *TypeConverter_Time) TypeName(g *fproto_phpwrap.GeneratorFile, tntype fproto_phpwrap.TypeNameType) string {
 
 	switch tntype {
-	case fproto_phpwrap.TNT_NS_WRAPNAME:
+	case fproto_phpwrap.TNT_NS_TYPENAME:
 		return "\\DateTime"
-	case fproto_phpwrap.TNT_NS_SOURCENAME:
-		return "\\Google\\Protobuf\\Timestamp"
 	}
 
 	return "DateTime"

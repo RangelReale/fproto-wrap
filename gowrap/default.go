@@ -22,7 +22,7 @@ type TypeNamer_Source struct {
 }
 
 // Gets the type name in relation to the current file
-func (t *TypeNamer_Source) TypeName(g *GeneratorFile, tntype TypeConverterTypeNameType) string {
+func (t *TypeNamer_Source) TypeName(g *GeneratorFile, tntype TypeNameType) string {
 	ret := ""
 
 	switch tntype {
@@ -74,7 +74,7 @@ type TypeNamer_Scalar struct {
 }
 
 // Gets the type name in relation to the current file
-func (t *TypeNamer_Scalar) TypeName(g *GeneratorFile, tntype TypeConverterTypeNameType) string {
+func (t *TypeNamer_Scalar) TypeName(g *GeneratorFile, tntype TypeNameType) string {
 	var ret string
 
 	switch tntype {
@@ -113,7 +113,7 @@ func (t *TypeConverter_Default) TCID() string {
 	return TCID_DEFAULT
 }
 
-func (t *TypeConverter_Default) TypeName(g *GeneratorFile, tntype TypeConverterTypeNameType) string {
+func (t *TypeConverter_Default) TypeName(g *GeneratorFile, tntype TypeNameType) string {
 	ret := ""
 
 	switch tntype {
@@ -219,7 +219,7 @@ func (t *TypeConverter_Scalar) TCID() string {
 	return TCID_SCALAR
 }
 
-func (t *TypeConverter_Scalar) TypeName(g *GeneratorFile, tntype TypeConverterTypeNameType) string {
+func (t *TypeConverter_Scalar) TypeName(g *GeneratorFile, tntype TypeNameType) string {
 	var ret string
 
 	switch tntype {
