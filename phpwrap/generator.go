@@ -417,7 +417,7 @@ func (g *Generator) GenerateMessage(message *fproto.MessageElement) error {
 		switch xfld := fld.(type) {
 		case *fproto.FieldElement:
 			// Get field type
-			tp_fld, err := tp_msg.MustGetType(xfld.Type)
+			tp_fld, err := tp_msg.GetType(xfld.Type)
 			if err != nil {
 				return err
 			}
@@ -432,11 +432,11 @@ func (g *Generator) GenerateMessage(message *fproto.MessageElement) error {
 			gf.P("private $", fldname, " = null;")
 		case *fproto.MapFieldElement:
 			// Get field type
-			tp_fld, err := tp_msg.MustGetType(xfld.Type)
+			tp_fld, err := tp_msg.GetType(xfld.Type)
 			if err != nil {
 				return err
 			}
-			tp_keyfld, err := tp_msg.MustGetType(xfld.KeyType)
+			tp_keyfld, err := tp_msg.GetType(xfld.KeyType)
 			if err != nil {
 				return err
 			}
@@ -466,7 +466,7 @@ func (g *Generator) GenerateMessage(message *fproto.MessageElement) error {
 				switch xoofld := oofld.(type) {
 				case *fproto.FieldElement:
 					// Get field type
-					tp_oofld, err := tp_msg.MustGetType(xoofld.Type)
+					tp_oofld, err := tp_msg.GetType(xoofld.Type)
 					if err != nil {
 						return err
 					}
@@ -485,11 +485,11 @@ func (g *Generator) GenerateMessage(message *fproto.MessageElement) error {
 					gf.P("private $", oofldname, " = null;")
 				case *fproto.MapFieldElement:
 					// Get field type
-					tp_oofld, err := tp_msg.MustGetType(xoofld.Type)
+					tp_oofld, err := tp_msg.GetType(xoofld.Type)
 					if err != nil {
 						return err
 					}
-					tp_ookeyfld, err := tp_msg.MustGetType(xoofld.KeyType)
+					tp_ookeyfld, err := tp_msg.GetType(xoofld.KeyType)
 					if err != nil {
 						return err
 					}
@@ -702,7 +702,7 @@ func (g *Generator) generateFieldGetterSetter(gf *GeneratorFile, parent_type *fd
 	switch xfld := fld.(type) {
 	case *fproto.FieldElement:
 		// Get field type
-		tp_fld, err := parent_type.MustGetType(xfld.Type)
+		tp_fld, err := parent_type.GetType(xfld.Type)
 		if err != nil {
 			return err
 		}
@@ -755,11 +755,11 @@ func (g *Generator) generateFieldGetterSetter(gf *GeneratorFile, parent_type *fd
 		gf.P()
 	case *fproto.MapFieldElement:
 		// Get field type
-		tp_fld, err := parent_type.MustGetType(xfld.Type)
+		tp_fld, err := parent_type.GetType(xfld.Type)
 		if err != nil {
 			return err
 		}
-		tp_keyfld, err := parent_type.MustGetType(xfld.KeyType)
+		tp_keyfld, err := parent_type.GetType(xfld.KeyType)
 		if err != nil {
 			return err
 		}
@@ -846,7 +846,7 @@ func (g *Generator) generateFieldImport(gf *GeneratorFile, parent_type *fdep.Dep
 	switch xfld := fld.(type) {
 	case *fproto.FieldElement:
 		// Get field type
-		tp_fld, err := parent_type.MustGetType(xfld.Type)
+		tp_fld, err := parent_type.GetType(xfld.Type)
 		if err != nil {
 			return err
 		}
@@ -901,7 +901,7 @@ func (g *Generator) generateFieldImport(gf *GeneratorFile, parent_type *fdep.Dep
 		}
 	case *fproto.MapFieldElement:
 		// Get map field type
-		tp_fld, err := parent_type.MustGetType(xfld.Type)
+		tp_fld, err := parent_type.GetType(xfld.Type)
 		if err != nil {
 			return err
 		}
@@ -975,7 +975,7 @@ func (g *Generator) generateFieldExport(gf *GeneratorFile, parent_type *fdep.Dep
 
 	switch xfld := fld.(type) {
 	case *fproto.FieldElement:
-		tp_fld, err := parent_type.MustGetType(xfld.Type)
+		tp_fld, err := parent_type.GetType(xfld.Type)
 		if err != nil {
 			return err
 		}
@@ -1030,7 +1030,7 @@ func (g *Generator) generateFieldExport(gf *GeneratorFile, parent_type *fdep.Dep
 		}
 
 	case *fproto.MapFieldElement:
-		tp_fld, err := parent_type.MustGetType(xfld.Type)
+		tp_fld, err := parent_type.GetType(xfld.Type)
 		if err != nil {
 			return err
 		}
