@@ -18,14 +18,10 @@ type TypeConverterPlugin interface {
 }
 
 type TypeConverter interface {
+	TypeNamer
+
 	// Returns an UUID string uniquelly identifying this type converter (without {})
 	TCID() string
-
-	// Gets the type name in relation to the current file
-	TypeName(g *GeneratorFile, tntype TypeConverterTypeNameType) string
-
-	// Returns if the underlining type is a pointer
-	IsPointer() bool
 
 	// Generates code to import the type from the Go protobuf generated type
 	GenerateImport(g *GeneratorFile, varSrc string, varDest string, varError string) (checkError bool, err error)

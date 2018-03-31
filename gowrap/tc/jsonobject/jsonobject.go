@@ -69,16 +69,24 @@ func (t *TypeConverter_JSONObject) GenerateImport(g *fproto_gowrap.GeneratorFile
 func (t *TypeConverter_JSONObject) GenerateExport(g *fproto_gowrap.GeneratorFile, varSrc string, varDest string, varError string) (checkError bool, err error) {
 	alias := g.Dep("encoding/json", "json")
 
-	tc_go, err := g.G().GetGoType("", "fproto_wrap.JSONObject")
+	tp, err := g.G().GetDep().GetType("fproto_wrap.JSONObject")
 	if err != nil {
 		return false, err
 	}
+	tsource := g.G().GetTypeNamer(tp)
+
+	/*
+		tc_go, err := g.G().GetGoType("", "fproto_wrap.JSONObject")
+		if err != nil {
+			return false, err
+		}
+	*/
 
 	g.P("if ", varSrc, " != nil {")
 	g.In()
 
 	g.P("var jtemp []byte")
-	g.P(varDest, " = ", tc_go.TypeName(g, fproto_gowrap.TNT_EMPTYVALUE))
+	g.P(varDest, " = ", tsource.TypeName(g, fproto_gowrap.TNT_EMPTYVALUE))
 
 	g.P("jtemp, err = ", alias, ".Marshal(", varSrc, ")")
 	g.P("if err != nil {")

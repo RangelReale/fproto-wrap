@@ -1,6 +1,7 @@
 package fproto_gowrap
 
 import (
+	"errors"
 	"fmt"
 	"path"
 	"strings"
@@ -258,6 +259,12 @@ func (g *Generator) generateMessage(message *fproto.MessageElement) error {
 	// build aliases to the original type
 	go_alias_ie := g.FImpExp().FileDep(nil, "", false)
 
+	// get the message DepType
+	tp_msg := g.dep.DepTypeFromElement(message)
+	if tp_msg == nil {
+		return errors.New("message type not found")
+	}
+
 	// get the type names
 	msgGoName, msgProtoName := g.BuildMessageName(message)
 
@@ -290,10 +297,12 @@ func (g *Generator) generateMessage(message *fproto.MessageElement) error {
 			// fieldname fieldtype
 			g.FMain().GenerateComment(xfld.Comment)
 
-			tc_gowrap, err := g.GetGowrapType(msgProtoName, xfld.Type)
+			tp_fld, err := tp_msg.GetType(xfld.Type)
 			if err != nil {
 				return err
 			}
+
+			tinfo := g.GetTypeInfo(tp_fld)
 
 			var type_prefix string
 			tctn := TNT_FIELD_DEFINITION
@@ -303,21 +312,24 @@ func (g *Generator) generateMessage(message *fproto.MessageElement) error {
 				tctn = TNT_TYPENAME
 			}
 
-			g.FMain().P(fldGoName, " ", type_prefix, tc_gowrap.TypeName(g.FMain(), tctn), field_tag.OutputWithSpace())
+			g.FMain().P(fldGoName, " ", type_prefix, tinfo.Wrapped().TypeName(g.FMain(), tctn), field_tag.OutputWithSpace())
 		case *fproto.MapFieldElement:
 			// fieldname map[keytype]fieldtype
 			g.FMain().GenerateComment(xfld.Comment)
 
-			tc_gowrap, err := g.GetGowrapType(msgProtoName, xfld.Type)
+			tp_fld, err := tp_msg.GetType(xfld.Type)
 			if err != nil {
 				return err
 			}
-			keytc_gowrap, err := g.GetGowrapType(msgProtoName, xfld.KeyType)
+			tp_keyfld, err := tp_msg.GetType(xfld.KeyType)
 			if err != nil {
 				return err
 			}
 
-			g.FMain().P(fldGoName, " map[", keytc_gowrap.TypeName(g.FMain(), TNT_TYPENAME), "]", tc_gowrap.TypeName(g.FMain(), TNT_TYPENAME), field_tag.OutputWithSpace())
+			tinfo := g.GetTypeInfo(tp_fld)
+			tinfokey := g.GetTypeInfo(tp_keyfld)
+
+			g.FMain().P(fldGoName, " map[", tinfokey.Wrapped().TypeName(g.FMain(), TNT_TYPENAME), "]", tinfo.Wrapped().TypeName(g.FMain(), TNT_TYPENAME), field_tag.OutputWithSpace())
 		case *fproto.OneOfFieldElement:
 			// fieldname isSTRUCT_ONEOF
 			g.FMain().GenerateComment(xfld.Comment)
@@ -358,23 +370,24 @@ func (g *Generator) generateMessage(message *fproto.MessageElement) error {
 		switch xfld := fld.(type) {
 		case *fproto.FieldElement:
 			// fieldname = go_package.fieldname
-			tc_gowrap, err := g.GetGowrapType(msgProtoName, xfld.Type)
+			tp_fld, err := tp_msg.GetType(xfld.Type)
 			if err != nil {
 				return err
 			}
+			tinfo := g.GetTypeInfo(tp_fld)
 
 			source_field := "s." + fldGoName
 			dest_field := "ret." + fldGoName
 			if xfld.Repeated {
 				g.FImpExp().P("for _, ms := range s.", fldGoName, " {")
 				g.FImpExp().In()
-				g.FImpExp().P("var msi ", tc_gowrap.TypeName(g.FImpExp(), TNT_TYPENAME))
+				g.FImpExp().P("var msi ", tinfo.Wrapped().TypeName(g.FImpExp(), TNT_TYPENAME))
 
 				source_field = "ms"
 				dest_field = "msi"
 			}
 
-			check_error, err := tc_gowrap.GenerateImport(g.FImpExp(), source_field, dest_field, "err")
+			check_error, err := tinfo.Wrapped().GenerateImport(g.FImpExp(), source_field, dest_field, "err")
 			if err != nil {
 				return err
 			}
@@ -390,17 +403,17 @@ func (g *Generator) generateMessage(message *fproto.MessageElement) error {
 			}
 		case *fproto.MapFieldElement:
 			// fieldname map[keytype]fieldtype
-
-			tc_gowrap, err := g.GetGowrapType(msgProtoName, xfld.Type)
+			tp_fld, err := tp_msg.GetType(xfld.Type)
 			if err != nil {
 				return err
 			}
+			tinfo := g.GetTypeInfo(tp_fld)
 
 			g.FImpExp().P("for msidx, ms := range s.", fldGoName, " {")
 			g.FImpExp().In()
-			g.FImpExp().P("var msi ", tc_gowrap.TypeName(g.FImpExp(), TNT_TYPENAME))
+			g.FImpExp().P("var msi ", tinfo.Wrapped().TypeName(g.FImpExp(), TNT_TYPENAME))
 
-			check_error, err := tc_gowrap.GenerateImport(g.FImpExp(), "ms", "msi", "err")
+			check_error, err := tinfo.Wrapped().GenerateImport(g.FImpExp(), "ms", "msi", "err")
 			if err != nil {
 				return err
 			}
@@ -468,24 +481,24 @@ func (g *Generator) generateMessage(message *fproto.MessageElement) error {
 		switch xfld := fld.(type) {
 		case *fproto.FieldElement:
 			// fieldname = go_package.fieldname
-
-			tc_gowrap, tc_go, err := g.GetBothTypes(msgProtoName, xfld.Type)
+			tp_fld, err := tp_msg.GetType(xfld.Type)
 			if err != nil {
 				return err
 			}
+			tinfo := g.GetTypeInfo(tp_fld)
 
 			source_field := "m." + fldGoName
 			dest_field := "ret." + fldGoName
 			if xfld.Repeated {
 				g.FImpExp().P("for _, ms := range m.", fldGoName, " {")
 				g.FImpExp().In()
-				g.FImpExp().P("var msi ", tc_go.TypeName(g.FImpExp(), TNT_TYPENAME))
+				g.FImpExp().P("var msi ", tinfo.Source().TypeName(g.FImpExp(), TNT_TYPENAME))
 
 				source_field = "ms"
 				dest_field = "msi"
 			}
 
-			check_error, err := tc_gowrap.GenerateExport(g.FImpExp(), source_field, dest_field, "err")
+			check_error, err := tinfo.Wrapped().GenerateExport(g.FImpExp(), source_field, dest_field, "err")
 			if err != nil {
 				return err
 			}
@@ -502,17 +515,17 @@ func (g *Generator) generateMessage(message *fproto.MessageElement) error {
 
 		case *fproto.MapFieldElement:
 			// fieldname map[keytype]fieldtype
-
-			tc_gowrap, tc_go, err := g.GetBothTypes(msgProtoName, xfld.Type)
+			tp_fld, err := tp_msg.GetType(xfld.Type)
 			if err != nil {
 				return err
 			}
+			tinfo := g.GetTypeInfo(tp_fld)
 
 			g.FImpExp().P("for msidx, ms := range m.", fldGoName, " {")
 			g.FImpExp().In()
-			g.FImpExp().P("var msi ", tc_go.TypeName(g.FImpExp(), TNT_TYPENAME))
+			g.FImpExp().P("var msi ", tinfo.Source().TypeName(g.FImpExp(), TNT_TYPENAME))
 
-			check_error, err := tc_gowrap.GenerateExport(g.FImpExp(), "ms", "msi", "err")
+			check_error, err := tinfo.Wrapped().GenerateExport(g.FImpExp(), "ms", "msi", "err")
 			if err != nil {
 				return err
 			}
@@ -686,6 +699,12 @@ func (g *Generator) generateOneOf(oneof *fproto.OneOfFieldElement) error {
 	// CUSTOMIZER
 	cz := &wrapCustomizers{g.Customizers}
 
+	// get DepType from element
+	tp_oneof := g.dep.DepTypeFromElement(oneof)
+	if tp_oneof == nil {
+		return errors.New("oneof type not found")
+	}
+
 	// build aliases to the original type
 	go_alias_ie := g.FImpExp().FileDep(nil, "", false)
 
@@ -722,6 +741,11 @@ func (g *Generator) generateOneOf(oneof *fproto.OneOfFieldElement) error {
 			// type STRUCT_ONEOFFIELD struct {
 			// 		ONEOFFIELD fieldtype
 			// }
+			tp_fld, err := tp_oneof.GetType(xoofld.Type)
+			if err != nil {
+				return err
+			}
+			tinfo := g.GetTypeInfo(tp_fld)
 
 			oneofFieldGoName, oneofFieldProtoName := g.BuildOneOfFieldName(xoofld)
 
@@ -729,12 +753,7 @@ func (g *Generator) generateOneOf(oneof *fproto.OneOfFieldElement) error {
 			g.FMain().In()
 
 			// fieldname fieldtype
-			tc_gowrap, err := g.GetGowrapType(oneofFieldProtoName, xoofld.Type)
-			if err != nil {
-				return err
-			}
-
-			g.FMain().P(fldGoName, " ", tc_gowrap.TypeName(g.FMain(), TNT_TYPENAME), field_tag.OutputWithSpace())
+			g.FMain().P(fldGoName, " ", tinfo.Wrapped().TypeName(g.FMain(), TNT_TYPENAME), field_tag.OutputWithSpace())
 
 			g.FMain().Out()
 			g.FMain().P("}")
@@ -756,12 +775,7 @@ func (g *Generator) generateOneOf(oneof *fproto.OneOfFieldElement) error {
 			g.FImpExp().P("var err error")
 			g.FImpExp().P("ret := &", oneofFieldGoName, "{}")
 
-			tcoo_gowrap, err := g.GetGowrapType(oneofFieldProtoName, xoofld.Type)
-			if err != nil {
-				return err
-			}
-
-			check_error, err := tcoo_gowrap.GenerateImport(g.FImpExp(), "s."+fldGoName, "ret."+fldGoName, "err")
+			check_error, err := tinfo.Wrapped().GenerateImport(g.FImpExp(), "s."+fldGoName, "ret."+fldGoName, "err")
 			if err != nil {
 				return err
 			}
@@ -785,7 +799,7 @@ func (g *Generator) generateOneOf(oneof *fproto.OneOfFieldElement) error {
 			g.FImpExp().P("var err error")
 			g.FImpExp().P("ret := &", go_alias_ie, ".", oneofFieldGoName, "{}")
 
-			check_error, err = tcoo_gowrap.GenerateExport(g.FImpExp(), "o."+fldGoName, "ret."+fldGoName, "err")
+			check_error, err = tinfo.Wrapped().GenerateExport(g.FImpExp(), "o."+fldGoName, "ret."+fldGoName, "err")
 			if err != nil {
 				return err
 			}
@@ -847,6 +861,7 @@ func (g *Generator) BuildTypeName(dt *fdep.DepType) (goName string, protoName st
 	return strings.Replace(dt.Name, ".", "_", -1), dt.Name, dt.Name
 }
 
+/*
 // Get gowrap type
 // The parameters MUST be protobuf names
 func (g *Generator) GetGowrapType(scope, fldtype string) (TypeConverter, error) {
@@ -902,6 +917,34 @@ func (g *Generator) GetBothTypes(scope, fldtype string) (tc_gowrap TypeConverter
 	}
 
 	return
+}
+*/
+
+func (g *Generator) GetTypeNamer(tp *fdep.DepType) TypeNamer {
+	if tp.IsScalar() {
+		return &TypeNamer_Scalar{tp: tp}
+	} else {
+		return &TypeNamer_Source{tp: tp}
+	}
+}
+
+func (g *Generator) GetTypeConverter(tp *fdep.DepType) TypeConverter {
+	if tp.IsScalar() {
+		return &TypeConverter_Scalar{tp: tp}
+	} else {
+		if tc := g.getTypeConv(tp); tc != nil {
+			return tc
+		} else {
+			return &TypeConverter_Default{g: g, tp: tp, filedep: g.filedep}
+		}
+	}
+}
+
+func (g *Generator) GetTypeInfo(tp *fdep.DepType) TypeInfo {
+	return &TypeInfo_Default{
+		source:  g.GetTypeNamer(tp),
+		wrapped: g.GetTypeConverter(tp),
+	}
 }
 
 // Get dependent type

@@ -74,12 +74,13 @@ func (t *TypeConverter_UUID) GenerateImport(g *fproto_gowrap.GeneratorFile, varS
 }
 
 func (t *TypeConverter_UUID) GenerateExport(g *fproto_gowrap.GeneratorFile, varSrc string, varDest string, varError string) (checkError bool, err error) {
-	tc_go, err := g.G().GetGoType("", "fproto_wrap.UUID")
+	tp, err := g.G().GetDep().GetType("fproto_wrap.UUID")
 	if err != nil {
 		return false, err
 	}
+	tsource := g.G().GetTypeNamer(tp)
 
-	g.P(varDest, " = ", tc_go.TypeName(g, fproto_gowrap.TNT_EMPTYVALUE))
+	g.P(varDest, " = ", tsource.TypeName(g, fproto_gowrap.TNT_EMPTYVALUE))
 	g.P(varDest, ".Value = ", varSrc, ".String()")
 	return false, nil
 }
@@ -135,12 +136,13 @@ func (t *TypeConverter_NullUUID) GenerateImport(g *fproto_gowrap.GeneratorFile, 
 }
 
 func (t *TypeConverter_NullUUID) GenerateExport(g *fproto_gowrap.GeneratorFile, varSrc string, varDest string, varError string) (checkError bool, err error) {
-	tc_go, err := g.G().GetGoType("", "fproto_wrap.NullUUID")
+	tp, err := g.G().GetDep().GetType("fproto_wrap.NullUUID")
 	if err != nil {
 		return false, err
 	}
+	tsource := g.G().GetTypeNamer(tp)
 
-	g.P(varDest, " = ", tc_go.TypeName(g, fproto_gowrap.TNT_EMPTYVALUE))
+	g.P(varDest, " = ", tsource.TypeName(g, fproto_gowrap.TNT_EMPTYVALUE))
 	g.P("if ", varSrc, ".Valid {")
 	g.In()
 	g.P(varDest, ".Value = ", varSrc, ".UUID.String()")

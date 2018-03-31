@@ -1,6 +1,7 @@
 package fproto_gowrap
 
 import (
+	"errors"
 	"strings"
 
 	"github.com/RangelReale/fproto"
@@ -30,6 +31,11 @@ func (s *ServiceGen_gRPC) GenerateService(g *Generator, svc *fproto.ServiceEleme
 	util_alias = g.FService().Dep("github.com/RangelReale/fproto-wrap/gowrap/util", "fproto_gowrap_util")
 	func_alias := g.FService().FileDep(nil, "", false)
 
+	tp_svc := g.dep.DepTypeFromElement(svc)
+	if tp_svc == nil {
+		return errors.New("service type not found")
+	}
+
 	svcName := fproto_wrap.CamelCase(svc.Name)
 
 	//
@@ -49,14 +55,28 @@ func (s *ServiceGen_gRPC) GenerateService(g *Generator, svc *fproto.ServiceEleme
 	g.FService().In()
 
 	for _, rpc := range svc.RPCs {
-		tc_req, err := g.GetGowrapType("", rpc.RequestType)
+		tp_req, err := tp_svc.GetType(rpc.RequestType)
 		if err != nil {
 			return err
 		}
-		tc_resp, err := g.GetGowrapType("", rpc.ResponseType)
+		tp_resp, err := tp_svc.GetType(rpc.ResponseType)
 		if err != nil {
 			return err
 		}
+
+		tinfo_req := g.GetTypeInfo(tp_req)
+		tinfo_resp := g.GetTypeInfo(tp_resp)
+
+		/*
+			tc_req, err := g.GetGowrapType("", rpc.RequestType)
+			if err != nil {
+				return err
+			}
+			tc_resp, err := g.GetGowrapType("", rpc.ResponseType)
+			if err != nil {
+				return err
+			}
+		*/
 
 		g.FService().GenerateComment(rpc.Comment)
 
@@ -64,7 +84,7 @@ func (s *ServiceGen_gRPC) GenerateService(g *Generator, svc *fproto.ServiceEleme
 			//
 			// MyRPC(ctx context.Context, in *MyReq, opts ...grpc.CallOption) (MyService_MyRPCClient, error)
 			//
-			g.FService().P(rpc.Name, "(ctx ", ctx_alias, ".Context, in ", tc_req.TypeName(g.FService(), TNT_TYPENAME), ", opts ...", grpc_alias, ".CallOption) (", svcName, "_", rpc.Name, "Client, error)")
+			g.FService().P(rpc.Name, "(ctx ", ctx_alias, ".Context, in ", tinfo_req.Wrapped().TypeName(g.FService(), TNT_TYPENAME), ", opts ...", grpc_alias, ".CallOption) (", svcName, "_", rpc.Name, "Client, error)")
 
 		} else if rpc.StreamsResponse || rpc.StreamsRequest {
 			//
@@ -76,7 +96,7 @@ func (s *ServiceGen_gRPC) GenerateService(g *Generator, svc *fproto.ServiceEleme
 			//
 			// MyRPC(ctx context.Context, in *MyReq, opts ...grpc.CallOption) (*MyResp, error)
 			//
-			g.FService().P(rpc.Name, "(ctx ", ctx_alias, ".Context, in ", tc_req.TypeName(g.FService(), TNT_TYPENAME), ", opts ...", grpc_alias, ".CallOption) (", tc_resp.TypeName(g.FService(), TNT_TYPENAME), ", error)")
+			g.FService().P(rpc.Name, "(ctx ", ctx_alias, ".Context, in ", tinfo_req.Wrapped().TypeName(g.FService(), TNT_TYPENAME), ", opts ...", grpc_alias, ".CallOption) (", tinfo_resp.Wrapped().TypeName(g.FService(), TNT_TYPENAME), ", error)")
 		}
 	}
 
@@ -117,20 +137,34 @@ func (s *ServiceGen_gRPC) GenerateService(g *Generator, svc *fproto.ServiceEleme
 	// Implement each RPC wrapper
 
 	for _, rpc := range svc.RPCs {
-		tc_req, tcgo_req, err := g.GetBothTypes("", rpc.RequestType)
+		tp_req, err := tp_svc.GetType(rpc.RequestType)
 		if err != nil {
 			return err
 		}
-		tc_resp, err := g.GetGowrapType("", rpc.ResponseType)
+		tp_resp, err := tp_svc.GetType(rpc.ResponseType)
 		if err != nil {
 			return err
 		}
+
+		tinfo_req := g.GetTypeInfo(tp_req)
+		tinfo_resp := g.GetTypeInfo(tp_resp)
+
+		/*
+			tc_req, tcgo_req, err := g.GetBothTypes("", rpc.RequestType)
+			if err != nil {
+				return err
+			}
+			tc_resp, err := g.GetGowrapType("", rpc.ResponseType)
+			if err != nil {
+				return err
+			}
+		*/
 
 		if rpc.StreamsResponse && !rpc.StreamsRequest {
 			//
 			// func (w *wrapMyServiceClient) MyRPC(ctx context.Context, in *MyReq, opts ...grpc.CallOption) (MyService_MyRPCClient, error)
 			//
-			g.FService().P("func (w *", wrapClientName, ") ", rpc.Name, "(ctx ", ctx_alias, ".Context, in ", tc_req.TypeName(g.FService(), TNT_TYPENAME), ", opts ...", grpc_alias, ".CallOption) (", svcName, "_", rpc.Name, "Client, error) {")
+			g.FService().P("func (w *", wrapClientName, ") ", rpc.Name, "(ctx ", ctx_alias, ".Context, in ", tinfo_req.Wrapped().TypeName(g.FService(), TNT_TYPENAME), ", opts ...", grpc_alias, ".CallOption) (", svcName, "_", rpc.Name, "Client, error) {")
 
 		} else if rpc.StreamsResponse || rpc.StreamsRequest {
 			//
@@ -142,7 +176,7 @@ func (s *ServiceGen_gRPC) GenerateService(g *Generator, svc *fproto.ServiceEleme
 			//
 			// func (w *wrapMyServiceClient) MyRPC(ctx context.Context, in *MyReq, opts ...grpc.CallOption) (*MyResp, error)
 			//
-			g.FService().P("func (w *", wrapClientName, ") ", rpc.Name, "(ctx ", ctx_alias, ".Context, in ", tc_req.TypeName(g.FService(), TNT_TYPENAME), ", opts ...", grpc_alias, ".CallOption) (", tc_resp.TypeName(g.FService(), TNT_TYPENAME), ", error) {")
+			g.FService().P("func (w *", wrapClientName, ") ", rpc.Name, "(ctx ", ctx_alias, ".Context, in ", tinfo_req.Wrapped().TypeName(g.FService(), TNT_TYPENAME), ", opts ...", grpc_alias, ".CallOption) (", tinfo_resp.Wrapped().TypeName(g.FService(), TNT_TYPENAME), ", error) {")
 		}
 
 		g.FService().In()
@@ -151,9 +185,9 @@ func (s *ServiceGen_gRPC) GenerateService(g *Generator, svc *fproto.ServiceEleme
 		g.FService().P()
 
 		// default return value
-		defretvalue := tc_resp.TypeName(g.FService(), TNT_EMPTYVALUE)
+		defretvalue := tinfo_resp.Wrapped().TypeName(g.FService(), TNT_EMPTYVALUE)
 		// default return value
-		defretnilvalue := tc_resp.TypeName(g.FService(), TNT_EMPTYORNILVALUE)
+		defretnilvalue := tinfo_resp.Wrapped().TypeName(g.FService(), TNT_EMPTYORNILVALUE)
 
 		// if stream request or response, return is always an interface
 		if rpc.StreamsResponse || rpc.StreamsRequest {
@@ -164,9 +198,9 @@ func (s *ServiceGen_gRPC) GenerateService(g *Generator, svc *fproto.ServiceEleme
 
 		// convert request
 		if !rpc.StreamsRequest {
-			g.FService().P("var wreq ", tcgo_req.TypeName(g.FService(), TNT_TYPENAME))
+			g.FService().P("var wreq ", tinfo_req.Source().TypeName(g.FService(), TNT_TYPENAME))
 
-			check_error, err = tc_req.GenerateExport(g.FService(), "in", "wreq", "err")
+			check_error, err = tinfo_req.Wrapped().GenerateExport(g.FService(), "in", "wreq", "err")
 			if err != nil {
 				return err
 			}
@@ -176,7 +210,7 @@ func (s *ServiceGen_gRPC) GenerateService(g *Generator, svc *fproto.ServiceEleme
 
 			g.FService().P("if wreq == nil {")
 			g.FService().In()
-			g.FService().P("wreq = ", tcgo_req.TypeName(g.FService(), TNT_EMPTYVALUE))
+			g.FService().P("wreq = ", tinfo_req.Source().TypeName(g.FService(), TNT_EMPTYVALUE))
 			g.FService().Out()
 			g.FService().P("}")
 
@@ -195,9 +229,9 @@ func (s *ServiceGen_gRPC) GenerateService(g *Generator, svc *fproto.ServiceEleme
 
 		// convert response
 		if !rpc.StreamsResponse && !rpc.StreamsRequest {
-			g.FService().P("var wresp ", tc_resp.TypeName(g.FService(), TNT_TYPENAME))
+			g.FService().P("var wresp ", tinfo_resp.Wrapped().TypeName(g.FService(), TNT_TYPENAME))
 
-			check_error, err = tc_resp.GenerateImport(g.FService(), "resp", "wresp", "err")
+			check_error, err = tinfo_resp.Wrapped().GenerateImport(g.FService(), "resp", "wresp", "err")
 			if err != nil {
 				return err
 			}
@@ -231,19 +265,19 @@ func (s *ServiceGen_gRPC) GenerateService(g *Generator, svc *fproto.ServiceEleme
 				//
 				// Send(*MyReq) error
 				//
-				g.FService().P("Send(", tc_req.TypeName(g.FService(), TNT_TYPENAME), ") error")
+				g.FService().P("Send(", tinfo_req.Wrapped().TypeName(g.FService(), TNT_TYPENAME), ") error")
 			}
 			if rpc.StreamsResponse {
 				//
 				// Recv() (*MyResp, error)
 				//
-				g.FService().P("Recv() (", tc_resp.TypeName(g.FService(), TNT_TYPENAME), ", error)")
+				g.FService().P("Recv() (", tinfo_resp.Wrapped().TypeName(g.FService(), TNT_TYPENAME), ", error)")
 			}
 			if rpc.StreamsRequest && !rpc.StreamsResponse {
 				//
 				// CloseAndRecv() (*MyResp, error)
 				//
-				g.FService().P("CloseAndRecv() (", tc_resp.TypeName(g.FService(), TNT_TYPENAME), ", error)")
+				g.FService().P("CloseAndRecv() (", tinfo_resp.Wrapped().TypeName(g.FService(), TNT_TYPENAME), ", error)")
 			}
 
 			g.FService().Out()
@@ -269,15 +303,15 @@ func (s *ServiceGen_gRPC) GenerateService(g *Generator, svc *fproto.ServiceEleme
 				//
 				// func (w *wrapMyServiceMyRPCClient) Send(*MyReq) error
 				//
-				g.FService().P("func (w *", wrapRPCClientName, ") Send(m ", tc_req.TypeName(g.FService(), TNT_TYPENAME), ") error {")
+				g.FService().P("func (w *", wrapRPCClientName, ") Send(m ", tinfo_req.Wrapped().TypeName(g.FService(), TNT_TYPENAME), ") error {")
 				g.FService().In()
 
 				g.FService().P("var err error")
 
 				// convert request
-				g.FService().P("var wreq ", tcgo_req.TypeName(g.FService(), TNT_TYPENAME))
+				g.FService().P("var wreq ", tinfo_req.Source().TypeName(g.FService(), TNT_TYPENAME))
 
-				check_error, err := tc_req.GenerateExport(g.FService(), "m", "wreq", "err")
+				check_error, err := tinfo_req.Wrapped().GenerateExport(g.FService(), "m", "wreq", "err")
 				if err != nil {
 					return err
 				}
@@ -299,14 +333,14 @@ func (s *ServiceGen_gRPC) GenerateService(g *Generator, svc *fproto.ServiceEleme
 				//
 				// func (w *wrapMyServiceMyRPCClient) Recv() (*MyResp, error)
 				//
-				g.FService().P("func (w *", wrapRPCClientName, ") Recv() (", tc_resp.TypeName(g.FService(), TNT_TYPENAME), ", error) {")
+				g.FService().P("func (w *", wrapRPCClientName, ") Recv() (", tinfo_resp.Wrapped().TypeName(g.FService(), TNT_TYPENAME), ", error) {")
 				g.FService().In()
 				g.FService().P("resp, err := w.cli.Recv()")
 			} else {
 				//
 				// func (w *wrapMyServiceMyRPCClient) CloseAndRecv() (*MyResp, error)
 				//
-				g.FService().P("func (w *", wrapRPCClientName, ") CloseAndRecv() (", tc_resp.TypeName(g.FService(), TNT_TYPENAME), ", error) {")
+				g.FService().P("func (w *", wrapRPCClientName, ") CloseAndRecv() (", tinfo_resp.Wrapped().TypeName(g.FService(), TNT_TYPENAME), ", error) {")
 				g.FService().In()
 				g.FService().P("resp, err := w.cli.CloseAndRecv()")
 			}
@@ -315,9 +349,9 @@ func (s *ServiceGen_gRPC) GenerateService(g *Generator, svc *fproto.ServiceEleme
 			s.generateErrorCheck(g, defretnilvalue)
 			g.FService().P()
 
-			g.FService().P("var wresp ", tc_resp.TypeName(g.FService(), TNT_TYPENAME))
+			g.FService().P("var wresp ", tinfo_resp.Wrapped().TypeName(g.FService(), TNT_TYPENAME))
 
-			check_error, err = tc_resp.GenerateImport(g.FService(), "resp", "wresp", "err")
+			check_error, err = tinfo_resp.Wrapped().GenerateImport(g.FService(), "resp", "wresp", "err")
 			if err != nil {
 				return err
 			}
@@ -353,14 +387,28 @@ func (s *ServiceGen_gRPC) GenerateService(g *Generator, svc *fproto.ServiceEleme
 	g.FService().In()
 
 	for _, rpc := range svc.RPCs {
-		tc_req, err := g.GetGowrapType("", rpc.RequestType)
+		tp_req, err := tp_svc.GetType(rpc.RequestType)
 		if err != nil {
 			return err
 		}
-		tc_resp, err := g.GetGowrapType("", rpc.ResponseType)
+		tp_resp, err := tp_svc.GetType(rpc.ResponseType)
 		if err != nil {
 			return err
 		}
+
+		tinfo_req := g.GetTypeInfo(tp_req)
+		tinfo_resp := g.GetTypeInfo(tp_resp)
+
+		/*
+			tc_req, err := g.GetGowrapType("", rpc.RequestType)
+			if err != nil {
+				return err
+			}
+			tc_resp, err := g.GetGowrapType("", rpc.ResponseType)
+			if err != nil {
+				return err
+			}
+		*/
 
 		g.FService().GenerateComment(rpc.Comment)
 
@@ -368,7 +416,7 @@ func (s *ServiceGen_gRPC) GenerateService(g *Generator, svc *fproto.ServiceEleme
 			//
 			// MyRPC(*MyReq, MyService_MyRRPCServer) error
 			//
-			g.FService().P(rpc.Name, "(", tc_req.TypeName(g.FService(), TNT_TYPENAME), ", ", svcName, "_", rpc.Name, "Server) error")
+			g.FService().P(rpc.Name, "(", tinfo_req.Wrapped().TypeName(g.FService(), TNT_TYPENAME), ", ", svcName, "_", rpc.Name, "Server) error")
 		} else if rpc.StreamsRequest || rpc.StreamsResponse {
 			//
 			// MyRPC(MyService_MyRRPCServer) error
@@ -378,7 +426,7 @@ func (s *ServiceGen_gRPC) GenerateService(g *Generator, svc *fproto.ServiceEleme
 			//
 			// MyRPC(ctx.Context, *MyReq) (*MyResp, error)
 			//
-			g.FService().P(rpc.Name, "(", ctx_alias, ".Context, ", tc_req.TypeName(g.FService(), TNT_TYPENAME), ") (", tc_resp.TypeName(g.FService(), TNT_TYPENAME), ", error)")
+			g.FService().P(rpc.Name, "(", ctx_alias, ".Context, ", tinfo_req.Wrapped().TypeName(g.FService(), TNT_TYPENAME), ") (", tinfo_resp.Wrapped().TypeName(g.FService(), TNT_TYPENAME), ", error)")
 		}
 	}
 
@@ -450,20 +498,34 @@ func (s *ServiceGen_gRPC) GenerateService(g *Generator, svc *fproto.ServiceEleme
 
 	// Generate RPCs
 	for _, rpc := range svc.RPCs {
-		tc_req, tcgo_req, err := g.GetBothTypes("", rpc.RequestType)
+		tp_req, err := tp_svc.GetType(rpc.RequestType)
 		if err != nil {
 			return err
 		}
-		tc_resp, tcgo_resp, err := g.GetBothTypes("", rpc.ResponseType)
+		tp_resp, err := tp_svc.GetType(rpc.ResponseType)
 		if err != nil {
 			return err
 		}
+
+		tinfo_req := g.GetTypeInfo(tp_req)
+		tinfo_resp := g.GetTypeInfo(tp_resp)
+
+		/*
+			tc_req, tcgo_req, err := g.GetBothTypes("", rpc.RequestType)
+			if err != nil {
+				return err
+			}
+			tc_resp, tcgo_resp, err := g.GetBothTypes("", rpc.ResponseType)
+			if err != nil {
+				return err
+			}
+		*/
 
 		if !rpc.StreamsRequest && rpc.StreamsResponse {
 			//
 			// func (w *wrapMyServiceServer) MyRPC(*myapp.MyReq, myapp.MyService_MyRRPCServer) error
 			//
-			g.FService().P("func (w *", wrapServerName, ") ", rpc.Name, "(req ", tcgo_req.TypeName(g.FService(), TNT_TYPENAME), ", stream ", func_alias, ".", svcName, "_", rpc.Name, "Server) error {")
+			g.FService().P("func (w *", wrapServerName, ") ", rpc.Name, "(req ", tinfo_req.Source().TypeName(g.FService(), TNT_TYPENAME), ", stream ", func_alias, ".", svcName, "_", rpc.Name, "Server) error {")
 		} else if rpc.StreamsRequest || rpc.StreamsResponse {
 			//
 			// func (w *wrapMyServiceServer) MyRPC(stream myapp.MyService_MyRRPCServer) error
@@ -473,7 +535,7 @@ func (s *ServiceGen_gRPC) GenerateService(g *Generator, svc *fproto.ServiceEleme
 			//
 			// func (w *wrapMyServiceServer) MyRPC(ctx context.Context, req *myapp.MyReq) (*myapp.MyResp, error)
 			//
-			g.FService().P("func (w *", wrapServerName, ") ", rpc.Name, "(ctx ", ctx_alias, ".Context, req ", tcgo_req.TypeName(g.FService(), TNT_TYPENAME), ") (", tcgo_resp.TypeName(g.FService(), TNT_TYPENAME), ", error) {")
+			g.FService().P("func (w *", wrapServerName, ") ", rpc.Name, "(ctx ", ctx_alias, ".Context, req ", tinfo_req.Source().TypeName(g.FService(), TNT_TYPENAME), ") (", tinfo_resp.Source().TypeName(g.FService(), TNT_TYPENAME), ", error) {")
 		}
 
 		g.FService().In()
@@ -482,20 +544,20 @@ func (s *ServiceGen_gRPC) GenerateService(g *Generator, svc *fproto.ServiceEleme
 		g.FService().P()
 
 		// default return value
-		defretvalue := tcgo_resp.TypeName(g.FService(), TNT_EMPTYVALUE)
+		defretvalue := tinfo_resp.Source().TypeName(g.FService(), TNT_EMPTYVALUE)
 		send_defretvalue := defretvalue
 		if rpc.StreamsRequest || rpc.StreamsResponse {
 			defretvalue = ""
 		}
 
 		// default return value
-		defretnilvalue := tcgo_resp.TypeName(g.FService(), TNT_EMPTYORNILVALUE)
+		defretnilvalue := tinfo_resp.Source().TypeName(g.FService(), TNT_EMPTYORNILVALUE)
 
 		if !rpc.StreamsRequest {
 			// convert request
-			g.FService().P("var wreq ", tc_req.TypeName(g.FService(), TNT_TYPENAME))
+			g.FService().P("var wreq ", tinfo_req.Wrapped().TypeName(g.FService(), TNT_TYPENAME))
 
-			check_error, err := tc_req.GenerateImport(g.FService(), "req", "wreq", "err")
+			check_error, err := tinfo_req.Wrapped().GenerateImport(g.FService(), "req", "wreq", "err")
 			if err != nil {
 				return err
 			}
@@ -521,7 +583,7 @@ func (s *ServiceGen_gRPC) GenerateService(g *Generator, svc *fproto.ServiceEleme
 		// convert response
 		if !rpc.StreamsRequest && !rpc.StreamsResponse {
 			// Allows returning nil from server
-			if tc_resp.IsPointer() && defretvalue != "" {
+			if tinfo_resp.Wrapped().IsPointer() && defretvalue != "" {
 				g.FService().P("if resp == nil {")
 				g.FService().In()
 				g.FService().P("return ", defretvalue, ", nil")
@@ -529,9 +591,9 @@ func (s *ServiceGen_gRPC) GenerateService(g *Generator, svc *fproto.ServiceEleme
 				g.FService().P("}")
 			}
 
-			g.FService().P("var wresp ", tcgo_resp.TypeName(g.FService(), TNT_TYPENAME))
+			g.FService().P("var wresp ", tinfo_resp.Source().TypeName(g.FService(), TNT_TYPENAME))
 
-			check_error, err := tc_resp.GenerateExport(g.FService(), "resp", "wresp", "err")
+			check_error, err := tinfo_resp.Wrapped().GenerateExport(g.FService(), "resp", "wresp", "err")
 			if err != nil {
 				return err
 			}
@@ -566,19 +628,19 @@ func (s *ServiceGen_gRPC) GenerateService(g *Generator, svc *fproto.ServiceEleme
 				//
 				// Recv() (*MyReq, error)
 				//
-				g.FService().P("Recv() (", tc_req.TypeName(g.FService(), TNT_TYPENAME), ", error)")
+				g.FService().P("Recv() (", tinfo_req.Wrapped().TypeName(g.FService(), TNT_TYPENAME), ", error)")
 			}
 			if rpc.StreamsResponse {
 				//
 				// Send(*MyResp) error
 				//
-				g.FService().P("Send(", tc_resp.TypeName(g.FService(), TNT_TYPENAME), ") error")
+				g.FService().P("Send(", tinfo_resp.Wrapped().TypeName(g.FService(), TNT_TYPENAME), ") error")
 			}
 			if rpc.StreamsRequest && !rpc.StreamsResponse {
 				//
 				// SendAndClose(*MyResp) error
 				//
-				g.FService().P("SendAndClose(", tc_resp.TypeName(g.FService(), TNT_TYPENAME), ") error")
+				g.FService().P("SendAndClose(", tinfo_resp.Wrapped().TypeName(g.FService(), TNT_TYPENAME), ") error")
 			}
 
 			g.FService().Out()
@@ -604,7 +666,7 @@ func (s *ServiceGen_gRPC) GenerateService(g *Generator, svc *fproto.ServiceEleme
 				//
 				// func (w *wrapMyServiceMyRPCServer) Send(*MyReq) error
 				//
-				g.FService().P("func (w *", wrapRPCServerName, ") Recv() (", tc_req.TypeName(g.FService(), TNT_TYPENAME), ", error) {")
+				g.FService().P("func (w *", wrapRPCServerName, ") Recv() (", tinfo_req.Wrapped().TypeName(g.FService(), TNT_TYPENAME), ", error) {")
 				g.FService().In()
 
 				g.FService().P("var err error")
@@ -614,9 +676,9 @@ func (s *ServiceGen_gRPC) GenerateService(g *Generator, svc *fproto.ServiceEleme
 				g.FService().P()
 
 				// convert request
-				g.FService().P("var wreq ", tc_req.TypeName(g.FService(), TNT_TYPENAME))
+				g.FService().P("var wreq ", tinfo_req.Wrapped().TypeName(g.FService(), TNT_TYPENAME))
 
-				check_error, err := tc_req.GenerateImport(g.FService(), "req", "wreq", "err")
+				check_error, err := tinfo_req.Wrapped().GenerateImport(g.FService(), "req", "wreq", "err")
 				if err != nil {
 					return err
 				}
@@ -636,20 +698,20 @@ func (s *ServiceGen_gRPC) GenerateService(g *Generator, svc *fproto.ServiceEleme
 				//
 				// func (w *wrapMyServiceMyRPCServer) Send(*MyResp)  error
 				//
-				g.FService().P("func (w *", wrapRPCServerName, ") Send(resp ", tc_resp.TypeName(g.FService(), TNT_TYPENAME), ") error {")
+				g.FService().P("func (w *", wrapRPCServerName, ") Send(resp ", tinfo_resp.Wrapped().TypeName(g.FService(), TNT_TYPENAME), ") error {")
 			} else {
 				//
 				// func (w *wrapMyServiceMyRPCServer) CloseAndRecv() (*MyResp, error)
 				//
-				g.FService().P("func (w *", wrapRPCServerName, ") SendAndClose(resp ", tc_resp.TypeName(g.FService(), TNT_TYPENAME), ") error {")
+				g.FService().P("func (w *", wrapRPCServerName, ") SendAndClose(resp ", tinfo_resp.Wrapped().TypeName(g.FService(), TNT_TYPENAME), ") error {")
 			}
 
 			g.FService().In()
 			g.FService().P("var err error")
-			g.FService().P("var wresp ", tcgo_resp.TypeName(g.FService(), TNT_TYPENAME))
+			g.FService().P("var wresp ", tinfo_resp.Source().TypeName(g.FService(), TNT_TYPENAME))
 
 			// Allows returning nil from server
-			if tc_resp.IsPointer() && send_defretvalue != "" {
+			if tinfo_resp.Wrapped().IsPointer() && send_defretvalue != "" {
 				g.FService().P("if resp == nil {")
 				g.FService().In()
 				g.FService().P("wresp = ", send_defretvalue)
@@ -658,7 +720,7 @@ func (s *ServiceGen_gRPC) GenerateService(g *Generator, svc *fproto.ServiceEleme
 				g.FService().In()
 			}
 
-			check_error, err := tc_resp.GenerateExport(g.FService(), "resp", "wresp", "err")
+			check_error, err := tinfo_resp.Wrapped().GenerateExport(g.FService(), "resp", "wresp", "err")
 			if err != nil {
 				return err
 			}
@@ -667,7 +729,7 @@ func (s *ServiceGen_gRPC) GenerateService(g *Generator, svc *fproto.ServiceEleme
 			}
 
 			// Allows returning nil from server
-			if tc_resp.IsPointer() && send_defretvalue != "" {
+			if tinfo_resp.Wrapped().IsPointer() && send_defretvalue != "" {
 				g.FService().Out()
 				g.FService().P("}")
 			}

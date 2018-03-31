@@ -14,10 +14,9 @@ const (
 
 // Default type converter
 type TypeConverter_Default struct {
-	g         *Generator
-	tp        *fdep.DepType
-	filedep   *fdep.FileDep
-	is_gowrap bool
+	g       *Generator
+	tp      *fdep.DepType
+	filedep *fdep.FileDep
 }
 
 func (t *TypeConverter_Default) TCID() string {
@@ -49,10 +48,10 @@ func (t *TypeConverter_Default) TypeName(g *GeneratorFile, tntype TypeConverterT
 	// get Go type name
 	goTypeName, _, _ := g.G().BuildTypeName(t.tp)
 
-	if t.is_gowrap && t.tp.FileDep.IsSamePackage(t.filedep) {
+	if t.tp.FileDep.IsSamePackage(t.filedep) {
 		ret += fmt.Sprintf("%s", goTypeName)
 	} else {
-		falias := g.FileDep(t.tp.FileDep, t.tp.Alias, t.is_gowrap)
+		falias := g.FileDep(t.tp.FileDep, t.tp.Alias, true)
 		ret += fmt.Sprintf("%s.%s", falias, goTypeName)
 	}
 
@@ -77,8 +76,8 @@ func (t *TypeConverter_Default) GenerateImport(g *GeneratorFile, varSrc string, 
 	}
 
 	var falias string
-	if !t.is_gowrap || !t.tp.FileDep.IsSamePackage(t.filedep) {
-		falias = g.FileDep(t.tp.FileDep, t.tp.Alias, t.is_gowrap) + "."
+	if !t.tp.FileDep.IsSamePackage(t.filedep) {
+		falias = g.FileDep(t.tp.FileDep, t.tp.Alias, true) + "."
 	}
 
 	switch t.tp.Item.(type) {
@@ -115,8 +114,7 @@ func (t *TypeConverter_Default) GenerateExport(g *GeneratorFile, varSrc string, 
 
 // Type converter for scalar fields
 type TypeConverter_Scalar struct {
-	tp      *fdep.DepType
-	fldtype string
+	tp *fdep.DepType
 }
 
 func (t *TypeConverter_Scalar) TCID() string {
@@ -133,11 +131,7 @@ func (t *TypeConverter_Scalar) TypeName(g *GeneratorFile, tntype TypeConverterTy
 		}
 	}
 
-	if ft, ok := fproto.ParseScalarType(t.fldtype); ok {
-		return ret + ft.GoType()
-	}
-
-	return ret + t.fldtype
+	return ret + t.tp.ScalarType.GoType()
 }
 
 func (t *TypeConverter_Scalar) IsPointer() bool {
