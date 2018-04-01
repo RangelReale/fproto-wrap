@@ -277,3 +277,7 @@ func (g *GeneratorFile) GenerateErrorCheck(extraRetVal string) {
 	g.Out()
 	g.P("}")
 }
+
+func (g *GeneratorFile) GenerateSimpleErrorCheck() {
+	g.GenerateErrorCheck("")
+}
