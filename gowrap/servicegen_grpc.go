@@ -25,11 +25,11 @@ func (s *ServiceGen_gRPC) ServiceType() string {
 
 func (s *ServiceGen_gRPC) GenerateService(g *Generator, svc *fproto.ServiceElement) error {
 	// import all required dependencies
-	ctx_alias := g.FService().Dep("golang.org/x/net/context", "context")
-	grpc_alias := g.FService().Dep("google.golang.org/grpc", "grpc")
+	ctx_alias := g.FService().DeclDep("golang.org/x/net/context", "context")
+	grpc_alias := g.FService().DeclDep("google.golang.org/grpc", "grpc")
 	var util_alias string
-	util_alias = g.FService().Dep("github.com/RangelReale/fproto-wrap/gowrap/util", "fproto_gowrap_util")
-	func_alias := g.FService().FileDep(nil, "", false)
+	util_alias = g.FService().DeclDep("github.com/RangelReale/fproto-wrap/gowrap/util", "fproto_gowrap_util")
+	func_alias := g.FService().DeclFileDep(nil, "", false)
 
 	tp_svc := g.dep.DepTypeFromElement(svc)
 	if tp_svc == nil {

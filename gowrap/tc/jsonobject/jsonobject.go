@@ -47,7 +47,7 @@ func (t *TypeConverter_JSONObject) IsPointer() bool {
 }
 
 func (t *TypeConverter_JSONObject) GenerateImport(g *fproto_gowrap.GeneratorFile, varSrc string, varDest string, varError string) (checkError bool, err error) {
-	alias := g.Dep("encoding/json", "json")
+	alias := g.DeclDep("encoding/json", "json")
 
 	g.P("if ", varSrc, " != nil && ", varSrc, ".Value != \"\" {")
 	g.In()
@@ -67,7 +67,7 @@ func (t *TypeConverter_JSONObject) GenerateImport(g *fproto_gowrap.GeneratorFile
 }
 
 func (t *TypeConverter_JSONObject) GenerateExport(g *fproto_gowrap.GeneratorFile, varSrc string, varDest string, varError string) (checkError bool, err error) {
-	alias := g.Dep("encoding/json", "json")
+	alias := g.DeclDep("encoding/json", "json")
 
 	tp, err := g.G().GetDep().FindType("fproto_wrap.JSONObject")
 	if err != nil {

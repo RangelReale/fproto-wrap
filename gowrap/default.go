@@ -47,7 +47,7 @@ func (t *TypeNamer_Source) TypeName(g *GeneratorFile, tntype TypeNameType) strin
 	// get Go type name
 	goTypeName, _ := g.G().BuildTypeName(t.tp)
 
-	falias := g.FileDep(t.tp.DepFile, t.tp.Alias, false)
+	falias := g.DeclFileDep(t.tp.DepFile, t.tp.Alias, false)
 	ret += fmt.Sprintf("%s.%s", falias, goTypeName)
 
 	switch tntype {
@@ -141,7 +141,7 @@ func (t *TypeConverter_Default) TypeName(g *GeneratorFile, tntype TypeNameType) 
 	if t.tp.DepFile.IsSamePackage(t.depfile) {
 		ret += fmt.Sprintf("%s", goTypeName)
 	} else {
-		falias := g.FileDep(t.tp.DepFile, t.tp.Alias, true)
+		falias := g.DeclFileDep(t.tp.DepFile, t.tp.Alias, true)
 		ret += fmt.Sprintf("%s.%s", falias, goTypeName)
 	}
 
@@ -167,7 +167,7 @@ func (t *TypeConverter_Default) GenerateImport(g *GeneratorFile, varSrc string, 
 
 	var falias string
 	if !t.tp.DepFile.IsSamePackage(t.depfile) {
-		falias = g.FileDep(t.tp.DepFile, t.tp.Alias, true) + "."
+		falias = g.DeclFileDep(t.tp.DepFile, t.tp.Alias, true) + "."
 	}
 
 	switch t.tp.Item.(type) {

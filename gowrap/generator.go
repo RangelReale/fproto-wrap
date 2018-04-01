@@ -256,7 +256,7 @@ func (g *Generator) generateMessage(message *fproto.MessageElement) error {
 	}
 
 	// build aliases to the original type
-	go_alias_ie := g.FImpExp().FileDep(nil, "", false)
+	go_alias_ie := g.FImpExp().DeclFileDep(nil, "", false)
 
 	// get the message DepType
 	tp_msg := g.dep.DepTypeFromElement(message)
@@ -611,7 +611,7 @@ func (g *Generator) generateEnum(enum *fproto.EnumElement) error {
 	enGoName, enProtoName := g.BuildEnumName(enum)
 
 	// build aliases to the original type
-	go_alias := g.FMain().FileDep(nil, "", false)
+	go_alias := g.FMain().DeclFileDep(nil, "", false)
 
 	//
 	// type MyEnum = go_package.Enum
@@ -696,7 +696,7 @@ func (g *Generator) generateOneOf(oneof *fproto.OneOfFieldElement) error {
 	}
 
 	// build aliases to the original type
-	go_alias_ie := g.FImpExp().FileDep(nil, "", false)
+	go_alias_ie := g.FImpExp().DeclFileDep(nil, "", false)
 
 	ooGoName, ooProtoName := g.BuildOneOfName(oneof)
 

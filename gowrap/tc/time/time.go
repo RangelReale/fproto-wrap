@@ -39,7 +39,7 @@ func (t *TypeConverter_Time) TCID() string {
 }
 
 func (t *TypeConverter_Time) TypeName(g *fproto_gowrap.GeneratorFile, tntype fproto_gowrap.TypeNameType) string {
-	alias := g.Dep("time", "time")
+	alias := g.DeclDep("time", "time")
 	return fmt.Sprintf("%s.%s", alias, "Time")
 }
 
@@ -48,7 +48,7 @@ func (t *TypeConverter_Time) IsPointer() bool {
 }
 
 func (t *TypeConverter_Time) GenerateImport(g *fproto_gowrap.GeneratorFile, varSrc string, varDest string, varError string) (checkError bool, err error) {
-	pb_alias := g.Dep("github.com/golang/protobuf/ptypes", "pb_types")
+	pb_alias := g.DeclDep("github.com/golang/protobuf/ptypes", "pb_types")
 
 	g.P("if ", varSrc, " != nil {")
 	g.In()
@@ -60,7 +60,7 @@ func (t *TypeConverter_Time) GenerateImport(g *fproto_gowrap.GeneratorFile, varS
 }
 
 func (t *TypeConverter_Time) GenerateExport(g *fproto_gowrap.GeneratorFile, varSrc string, varDest string, varError string) (checkError bool, err error) {
-	pb_alias := g.Dep("github.com/golang/protobuf/ptypes", "pb_types")
+	pb_alias := g.DeclDep("github.com/golang/protobuf/ptypes", "pb_types")
 
 	g.P(varDest, ", err = ", pb_alias, ".TimestampProto(", varSrc, ")")
 
@@ -76,7 +76,7 @@ func (t *TypeConverter_NullTime) TCID() string {
 }
 
 func (t *TypeConverter_NullTime) TypeName(g *fproto_gowrap.GeneratorFile, tntype fproto_gowrap.TypeNameType) string {
-	alias := g.Dep("github.com/RangelReale/fproto-wrap/gowrap/tc/time/ptypes", "time_ptypes")
+	alias := g.DeclDep("github.com/RangelReale/fproto-wrap/gowrap/tc/time/ptypes", "time_ptypes")
 	return fmt.Sprintf("%s.%s", alias, "NullTime")
 }
 
@@ -85,8 +85,8 @@ func (t *TypeConverter_NullTime) IsPointer() bool {
 }
 
 func (t *TypeConverter_NullTime) GenerateImport(g *fproto_gowrap.GeneratorFile, varSrc string, varDest string, varError string) (checkError bool, err error) {
-	pb_alias := g.Dep("github.com/golang/protobuf/ptypes", "pb_types")
-	alias := g.Dep("github.com/RangelReale/fproto-wrap/gowrap/tc/time/ptypes", "time_ptypes")
+	pb_alias := g.DeclDep("github.com/golang/protobuf/ptypes", "pb_types")
+	alias := g.DeclDep("github.com/RangelReale/fproto-wrap/gowrap/tc/time/ptypes", "time_ptypes")
 
 	g.P("if ", varSrc, " != nil {")
 	g.In()
@@ -108,8 +108,8 @@ func (t *TypeConverter_NullTime) GenerateImport(g *fproto_gowrap.GeneratorFile, 
 }
 
 func (t *TypeConverter_NullTime) GenerateExport(g *fproto_gowrap.GeneratorFile, varSrc string, varDest string, varError string) (checkError bool, err error) {
-	pb_alias := g.Dep("github.com/golang/protobuf/ptypes", "pb_types")
-	alias := g.Dep("github.com/RangelReale/fproto-wrap/gowrap/gwproto", "time")
+	pb_alias := g.DeclDep("github.com/golang/protobuf/ptypes", "pb_types")
+	alias := g.DeclDep("github.com/RangelReale/fproto-wrap/gowrap/gwproto", "time")
 
 	g.P("if ", varSrc, ".Valid {")
 	g.In()

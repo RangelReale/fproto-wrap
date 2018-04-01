@@ -56,13 +56,13 @@ func (g *GeneratorFile) DepFile(depfile *fdep.DepFile, defalias string, is_gowra
 	} else {
 		p = depfile.GoPackage()
 	}
-	return g.Dep(p, defalias)
+	return g.DeclDep(p, defalias)
 }
 */
 
 // Declares a dependency and returns the alias to be used on this file.
 /*
-func (g *GeneratorFile) Dep(imp string, defalias string) string {
+func (g *GeneratorFile) DeclDep(imp string, defalias string) string {
 	var alias string
 	var ok bool
 	if alias, ok = g.imports[imp]; ok {

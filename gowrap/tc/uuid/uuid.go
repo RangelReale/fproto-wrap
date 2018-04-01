@@ -47,7 +47,7 @@ func (t *TypeConverter_UUID) TCID() string {
 }
 
 func (t *TypeConverter_UUID) TypeName(g *fproto_gowrap.GeneratorFile, tntype fproto_gowrap.TypeNameType) string {
-	alias := g.Dep("github.com/RangelReale/go.uuid", "uuid")
+	alias := g.DeclDep("github.com/RangelReale/go.uuid", "uuid")
 
 	switch tntype {
 	case fproto_gowrap.TNT_EMPTYVALUE, fproto_gowrap.TNT_EMPTYORNILVALUE:
@@ -62,7 +62,7 @@ func (t *TypeConverter_UUID) IsPointer() bool {
 }
 
 func (t *TypeConverter_UUID) GenerateImport(g *fproto_gowrap.GeneratorFile, varSrc string, varDest string, varError string) (checkError bool, err error) {
-	alias := g.Dep("github.com/RangelReale/go.uuid", "uuid")
+	alias := g.DeclDep("github.com/RangelReale/go.uuid", "uuid")
 
 	g.P("if ", varSrc, " != nil {")
 	g.In()
@@ -98,7 +98,7 @@ func (t *TypeConverter_NullUUID) TCID() string {
 }
 
 func (t *TypeConverter_NullUUID) TypeName(g *fproto_gowrap.GeneratorFile, tntype fproto_gowrap.TypeNameType) string {
-	alias := g.Dep("github.com/RangelReale/go.uuid", "uuid")
+	alias := g.DeclDep("github.com/RangelReale/go.uuid", "uuid")
 
 	switch tntype {
 	case fproto_gowrap.TNT_EMPTYVALUE, fproto_gowrap.TNT_EMPTYORNILVALUE:
@@ -113,7 +113,7 @@ func (t *TypeConverter_NullUUID) IsPointer() bool {
 }
 
 func (t *TypeConverter_NullUUID) GenerateImport(g *fproto_gowrap.GeneratorFile, varSrc string, varDest string, varError string) (checkError bool, err error) {
-	alias := g.Dep("github.com/RangelReale/go.uuid", "uuid")
+	alias := g.DeclDep("github.com/RangelReale/go.uuid", "uuid")
 
 	g.P("if ", varSrc, " != nil {")
 	g.In()
