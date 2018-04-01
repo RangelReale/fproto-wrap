@@ -97,7 +97,7 @@ func (t *TypeNamer_Scalar) IsPointer() bool {
 //
 
 const (
-	TCID_DEFAULT string = "d7365856-bd04-413e-976d-350998cc1e7d"
+	TCID_DEFAULT TCID = "d7365856-bd04-413e-976d-350998cc1e7d"
 )
 
 // Default type converter
@@ -109,7 +109,7 @@ type TypeConverter_Default struct {
 	depfile *fdep.DepFile
 }
 
-func (t *TypeConverter_Default) TCID() string {
+func (t *TypeConverter_Default) TCID() TCID {
 	return TCID_DEFAULT
 }
 
@@ -207,7 +207,7 @@ func (t *TypeConverter_Default) GenerateExport(g *GeneratorFile, varSrc string, 
 //
 
 const (
-	TCID_SCALAR string = "cb67c193-7b51-4392-baa2-3c92ba6015e6"
+	TCID_SCALAR TCID = "cb67c193-7b51-4392-baa2-3c92ba6015e6"
 )
 
 // Type converter for scalar fields
@@ -215,7 +215,7 @@ type TypeConverter_Scalar struct {
 	tp *fdep.DepType
 }
 
-func (t *TypeConverter_Scalar) TCID() string {
+func (t *TypeConverter_Scalar) TCID() TCID {
 	return TCID_SCALAR
 }
 

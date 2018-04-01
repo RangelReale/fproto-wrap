@@ -8,8 +8,8 @@ import (
 )
 
 const (
-	TCID_TIME     string = "de426778-4912-450e-b531-8e83f8056ce3"
-	TCID_NULLTIME string = "11ed386a-0cee-4590-9090-b03c0325e13a"
+	TCID_TIME     fproto_gowrap.TCID = "de426778-4912-450e-b531-8e83f8056ce3"
+	TCID_NULLTIME fproto_gowrap.TCID = "11ed386a-0cee-4590-9090-b03c0325e13a"
 )
 
 // Converts between google.protobuf.Timestamp and time.Time
@@ -34,7 +34,7 @@ func (t *TypeConverterPlugin_Time) GetTypeConverter(tp *fdep.DepType) fproto_gow
 type TypeConverter_Time struct {
 }
 
-func (t *TypeConverter_Time) TCID() string {
+func (t *TypeConverter_Time) TCID() fproto_gowrap.TCID {
 	return TCID_TIME
 }
 
@@ -71,7 +71,7 @@ func (t *TypeConverter_Time) GenerateExport(g *fproto_gowrap.GeneratorFile, varS
 type TypeConverter_NullTime struct {
 }
 
-func (t *TypeConverter_NullTime) TCID() string {
+func (t *TypeConverter_NullTime) TCID() fproto_gowrap.TCID {
 	return TCID_NULLTIME
 }
 

@@ -8,7 +8,7 @@ import (
 )
 
 const (
-	TCID_DURATION string = "9be62862-ed8b-4469-9c2c-d8fc6bc0054d"
+	TCID_DURATION fproto_gowrap.TCID = "9be62862-ed8b-4469-9c2c-d8fc6bc0054d"
 )
 
 // Converts between google.protobuf.Duration and time.Duration
@@ -28,7 +28,7 @@ func (t *TypeConverterPlugin_Duration) GetTypeConverter(tp *fdep.DepType) fproto
 type TypeConverter_Duration struct {
 }
 
-func (t *TypeConverter_Duration) TCID() string {
+func (t *TypeConverter_Duration) TCID() fproto_gowrap.TCID {
 	return TCID_DURATION
 }
 

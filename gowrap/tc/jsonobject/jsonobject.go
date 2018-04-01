@@ -6,7 +6,7 @@ import (
 )
 
 const (
-	TCID_JSONOBJECT string = "ad6a0d05-2ff0-42eb-b90e-dde487fd5141"
+	TCID_JSONOBJECT fproto_gowrap.TCID = "ad6a0d05-2ff0-42eb-b90e-dde487fd5141"
 )
 
 //
@@ -34,7 +34,7 @@ func (t *TypeConverterPlugin_JSONObject) GetTypeConverter(tp *fdep.DepType) fpro
 type TypeConverter_JSONObject struct {
 }
 
-func (t *TypeConverter_JSONObject) TCID() string {
+func (t *TypeConverter_JSONObject) TCID() fproto_gowrap.TCID {
 	return TCID_JSONOBJECT
 }
 
