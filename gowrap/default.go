@@ -18,7 +18,7 @@ type TypeNamer_Source struct {
 	//  The type of the source data
 	tp *fdep.DepType
 	// The file where the type is in relation to
-	filedep *fdep.FileDep
+	depfile *fdep.DepFile
 }
 
 // Gets the type name in relation to the current file
@@ -47,7 +47,7 @@ func (t *TypeNamer_Source) TypeName(g *GeneratorFile, tntype TypeNameType) strin
 	// get Go type name
 	goTypeName, _ := g.G().BuildTypeName(t.tp)
 
-	falias := g.FileDep(t.tp.FileDep, t.tp.Alias, false)
+	falias := g.FileDep(t.tp.DepFile, t.tp.Alias, false)
 	ret += fmt.Sprintf("%s.%s", falias, goTypeName)
 
 	switch tntype {
@@ -106,7 +106,7 @@ type TypeConverter_Default struct {
 	//  The type of the source data
 	tp *fdep.DepType
 	// The file where the type is in relation to
-	filedep *fdep.FileDep
+	depfile *fdep.DepFile
 }
 
 func (t *TypeConverter_Default) TCID() string {
@@ -138,10 +138,10 @@ func (t *TypeConverter_Default) TypeName(g *GeneratorFile, tntype TypeNameType) 
 	// get Go type name
 	goTypeName, _ := g.G().BuildTypeName(t.tp)
 
-	if t.tp.FileDep.IsSamePackage(t.filedep) {
+	if t.tp.DepFile.IsSamePackage(t.depfile) {
 		ret += fmt.Sprintf("%s", goTypeName)
 	} else {
-		falias := g.FileDep(t.tp.FileDep, t.tp.Alias, true)
+		falias := g.FileDep(t.tp.DepFile, t.tp.Alias, true)
 		ret += fmt.Sprintf("%s.%s", falias, goTypeName)
 	}
 
@@ -160,14 +160,14 @@ func (t *TypeConverter_Default) IsPointer() bool {
 }
 
 func (t *TypeConverter_Default) GenerateImport(g *GeneratorFile, varSrc string, varDest string, varError string) (checkError bool, err error) {
-	if !g.G().IsFileWrap(t.tp.FileDep) {
+	if !g.G().IsFileWrap(t.tp.DepFile) {
 		g.P(varDest, " = ", varSrc)
 		return false, nil
 	}
 
 	var falias string
-	if !t.tp.FileDep.IsSamePackage(t.filedep) {
-		falias = g.FileDep(t.tp.FileDep, t.tp.Alias, true) + "."
+	if !t.tp.DepFile.IsSamePackage(t.depfile) {
+		falias = g.FileDep(t.tp.DepFile, t.tp.Alias, true) + "."
 	}
 
 	switch t.tp.Item.(type) {
@@ -186,7 +186,7 @@ func (t *TypeConverter_Default) GenerateImport(g *GeneratorFile, varSrc string, 
 }
 
 func (t *TypeConverter_Default) GenerateExport(g *GeneratorFile, varSrc string, varDest string, varError string) (checkError bool, err error) {
-	if !g.G().IsFileWrap(t.tp.FileDep) {
+	if !g.G().IsFileWrap(t.tp.DepFile) {
 		g.P(varDest, " = ", varSrc)
 		return false, nil
 	}

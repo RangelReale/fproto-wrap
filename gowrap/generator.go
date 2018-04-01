@@ -29,7 +29,7 @@ const (
 // There can be more than one output files.
 type Generator struct {
 	dep        *fdep.Dep
-	filedep    *fdep.FileDep
+	depfile    *fdep.DepFile
 	tc_default TypeConverter
 
 	// Files to output
@@ -51,14 +51,14 @@ type Generator struct {
 
 // Creates a new generator for the file path.
 func NewGenerator(dep *fdep.Dep, filepath string) (*Generator, error) {
-	filedep, ok := dep.Files[filepath]
+	depfile, ok := dep.Files[filepath]
 	if !ok {
 		return nil, fmt.Errorf("File %s not found", filepath)
 	}
 
 	ret := &Generator{
 		dep:        dep,
-		filedep:    filedep,
+		depfile:    depfile,
 		Files:      make(map[string]*GeneratorFile),
 		FilesAlias: make(map[string]string),
 	}
@@ -121,7 +121,7 @@ func (g *Generator) FService() *GeneratorFile {
 
 // Gets the syntax
 func (g *Generator) Syntax() GeneratorSyntax {
-	if g.filedep.ProtoFile.Syntax == "proto3" {
+	if g.depfile.ProtoFile.Syntax == "proto3" {
 		return GeneratorSyntax_Proto3
 	}
 	return GeneratorSyntax_Proto2
@@ -131,17 +131,17 @@ func (g *Generator) GetDep() *fdep.Dep {
 	return g.dep
 }
 
-func (g *Generator) GetFileDep() *fdep.FileDep {
-	return g.filedep
+func (g *Generator) GetDepFile() *fdep.DepFile {
+	return g.depfile
 }
 
 // Check if the file should be wrapped (the file option fproto_wrap.wrap=false disables it)
-func (g *Generator) IsFileWrap(filedep *fdep.FileDep) bool {
-	if filedep.DepType != fdep.DepType_Own {
+func (g *Generator) IsFileWrap(depfile *fdep.DepFile) bool {
+	if depfile.DepType != fdep.DepType_Own {
 		return false
 	}
 
-	if o := filedep.ProtoFile.FindOption("fproto_wrap.wrap"); o != nil {
+	if o := depfile.ProtoFile.FindOption("fproto_wrap.wrap"); o != nil {
 		if o.Value.String() != "true" {
 			return false
 		}
@@ -187,7 +187,7 @@ func (g *Generator) Generate() error {
 
 // Generates the protobuf enums
 func (g *Generator) GenerateEnums() error {
-	for _, enum := range g.filedep.ProtoFile.CollectEnums() {
+	for _, enum := range g.depfile.ProtoFile.CollectEnums() {
 		err := g.generateEnum(enum.(*fproto.EnumElement))
 		if err != nil {
 			return err
@@ -198,7 +198,7 @@ func (g *Generator) GenerateEnums() error {
 
 // Generates the protobuf messages
 func (g *Generator) GenerateMessages() error {
-	for _, message := range g.filedep.ProtoFile.CollectMessages() {
+	for _, message := range g.depfile.ProtoFile.CollectMessages() {
 		err := g.generateMessage(message.(*fproto.MessageElement))
 		if err != nil {
 			return err
@@ -209,11 +209,11 @@ func (g *Generator) GenerateMessages() error {
 
 // Generates the protobuf services
 func (g *Generator) GenerateServices() error {
-	if g.ServiceGen == nil || len(g.filedep.ProtoFile.Services) == 0 {
+	if g.ServiceGen == nil || len(g.depfile.ProtoFile.Services) == 0 {
 		return nil
 	}
 
-	for _, svc := range g.filedep.ProtoFile.CollectServices() {
+	for _, svc := range g.depfile.ProtoFile.CollectServices() {
 		err := g.ServiceGen.GenerateService(g, svc.(*fproto.ServiceElement))
 		if err != nil {
 			return err
@@ -866,7 +866,7 @@ func (g *Generator) GetTypeConverter(tp *fdep.DepType) TypeConverter {
 		if tc := g.findTypeConv(tp); tc != nil {
 			return tc
 		} else {
-			return &TypeConverter_Default{g: g, tp: tp, filedep: g.filedep}
+			return &TypeConverter_Default{g: g, tp: tp, depfile: g.depfile}
 		}
 	}
 }
@@ -889,14 +889,14 @@ func (g *Generator) GetTypeInfoFromParent(parent_tp *fdep.DepType, atype string)
 }
 
 // Returns the wrapped package name.
-func (g *Generator) GoWrapPackage(filedep *fdep.FileDep) string {
+func (g *Generator) GoWrapPackage(depfile *fdep.DepFile) string {
 	if g.PkgSource != nil {
-		if p, ok := g.PkgSource.GetPkg(filedep); ok {
+		if p, ok := g.PkgSource.GetPkg(depfile); ok {
 			return p
 		}
 	}
 
-	for _, o := range filedep.ProtoFile.Options {
+	for _, o := range depfile.ProtoFile.Options {
 		if o.Name == "gowrap_package" {
 			return o.Value.String()
 		}
@@ -904,10 +904,10 @@ func (g *Generator) GoWrapPackage(filedep *fdep.FileDep) string {
 
 	// prepend "fpwrap"
 
-	for _, o := range filedep.ProtoFile.Options {
+	for _, o := range depfile.ProtoFile.Options {
 		if o.Name == "go_package" {
 			return path.Join("fpwrap", o.Value.String())
 		}
 	}
-	return path.Join("fpwrap", path.Dir(filedep.FilePath))
+	return path.Join("fpwrap", path.Dir(depfile.FilePath))
 }

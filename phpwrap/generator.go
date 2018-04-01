@@ -22,7 +22,7 @@ const (
 // There can be more than one output files.
 type Generator struct {
 	dep        *fdep.Dep
-	filedep    *fdep.FileDep
+	depfile    *fdep.DepFile
 	tc_default TypeConverter
 
 	// Files to output
@@ -44,14 +44,14 @@ type Generator struct {
 
 // Creates a new generator for the file path.
 func NewGenerator(dep *fdep.Dep, filepath string) (*Generator, error) {
-	filedep, ok := dep.Files[filepath]
+	depfile, ok := dep.Files[filepath]
 	if !ok {
 		return nil, fmt.Errorf("File %s not found", filepath)
 	}
 
 	ret := &Generator{
 		dep:     dep,
-		filedep: filedep,
+		depfile: depfile,
 		Files:   make(map[string]*GeneratorFile),
 		//FilesAlias: make(map[string]string),
 	}
@@ -76,7 +76,7 @@ func (g *Generator) F(fileId string) *GeneratorFile {
 
 // Gets the syntax
 func (g *Generator) Syntax() GeneratorSyntax {
-	if g.filedep.ProtoFile.Syntax == "proto3" {
+	if g.depfile.ProtoFile.Syntax == "proto3" {
 		return GeneratorSyntax_Proto3
 	}
 	return GeneratorSyntax_Proto2
@@ -86,17 +86,17 @@ func (g *Generator) GetDep() *fdep.Dep {
 	return g.dep
 }
 
-func (g *Generator) GetFileDep() *fdep.FileDep {
-	return g.filedep
+func (g *Generator) GetDepFile() *fdep.DepFile {
+	return g.depfile
 }
 
 // Check if the file should be wrapped (the file option fproto_wrap.wrap=false disables it)
-func (g *Generator) IsFileWrap(filedep *fdep.FileDep) bool {
-	if filedep.DepType != fdep.DepType_Own {
+func (g *Generator) IsFileWrap(depfile *fdep.DepFile) bool {
+	if depfile.DepType != fdep.DepType_Own {
 		return false
 	}
 
-	if o := filedep.ProtoFile.FindOption("fproto_wrap.wrap"); o != nil {
+	if o := depfile.ProtoFile.FindOption("fproto_wrap.wrap"); o != nil {
 		if o.Value.String() != "true" {
 			return false
 		}
@@ -290,7 +290,7 @@ func (g *Generator) BuildEnumName(enum *fproto.EnumElement) (phpName string, pro
 
 // Build message namespaced name
 func (g *Generator) BuildEnumNSName(tp *fdep.DepType) (sourceName string, wrapName string) {
-	sourceNS, wrapNS, _ := g.PhpWrapNS(tp.FileDep)
+	sourceNS, wrapNS, _ := g.PhpWrapNS(tp.DepFile)
 
 	// Camel-cased name, with "." replaced by "_"
 	phpName := fproto_wrap.CamelCaseProto(tp.Name)
@@ -301,7 +301,7 @@ func (g *Generator) BuildEnumNSName(tp *fdep.DepType) (sourceName string, wrapNa
 }
 
 func (g *Generator) GenerateEnums() error {
-	for _, s := range g.filedep.ProtoFile.CollectEnums() {
+	for _, s := range g.depfile.ProtoFile.CollectEnums() {
 		err := g.GenerateEnum(s.(*fproto.EnumElement))
 		if err != nil {
 			return err
@@ -312,7 +312,7 @@ func (g *Generator) GenerateEnums() error {
 }
 
 func (g *Generator) GenerateEnum(enum *fproto.EnumElement) error {
-	sourceNS, _, wrapPath := g.PhpWrapNS(g.filedep)
+	sourceNS, _, wrapPath := g.PhpWrapNS(g.depfile)
 	enPhpName, enProtoName := g.BuildEnumName(enum)
 	fileId := path.Join(wrapPath, enPhpName)
 
@@ -338,7 +338,7 @@ func (g *Generator) GenerateEnum(enum *fproto.EnumElement) error {
 }
 
 func (g *Generator) GenerateMessages() error {
-	for _, s := range g.filedep.ProtoFile.CollectMessages() {
+	for _, s := range g.depfile.ProtoFile.CollectMessages() {
 		err := g.GenerateMessage(s.(*fproto.MessageElement))
 		if err != nil {
 			return err
@@ -365,7 +365,7 @@ func (g *Generator) BuildMessageName(message *fproto.MessageElement) (phpName st
 
 // Build message namespaced name
 func (g *Generator) BuildMessageNSName(tp *fdep.DepType) (sourceName string, wrapName string) {
-	sourceNS, wrapNS, _ := g.PhpWrapNS(tp.FileDep)
+	sourceNS, wrapNS, _ := g.PhpWrapNS(tp.DepFile)
 
 	// Camel-cased name, with "." replaced by "_"
 	phpName := fproto_wrap.CamelCaseProto(tp.Name)
@@ -392,7 +392,7 @@ func (g *Generator) GenerateMessage(message *fproto.MessageElement) error {
 		return errors.New("message type not found")
 	}
 
-	sourceNS, _, wrapPath := g.PhpWrapNS(g.filedep)
+	sourceNS, _, wrapPath := g.PhpWrapNS(g.depfile)
 	msPhpName, msProtoName := g.BuildMessageName(message)
 	fileId := path.Join(wrapPath, msPhpName)
 
@@ -1079,11 +1079,11 @@ func (g *Generator) generateFieldExport(gf *GeneratorFile, parent_type *fdep.Dep
 
 // Generates the protobuf services
 func (g *Generator) GenerateServices() error {
-	if g.ServiceGen == nil || len(g.filedep.ProtoFile.Services) == 0 {
+	if g.ServiceGen == nil || len(g.depfile.ProtoFile.Services) == 0 {
 		return nil
 	}
 
-	for _, s := range g.filedep.ProtoFile.CollectServices() {
+	for _, s := range g.depfile.ProtoFile.CollectServices() {
 		err := g.ServiceGen.GenerateService(g, s.(*fproto.ServiceElement))
 		if err != nil {
 			return err
@@ -1121,7 +1121,7 @@ func (g *Generator) GetTypeConverter(tp *fdep.DepType) TypeConverter {
 		if tc := g.findTypeConv(tp); tc != nil {
 			return tc
 		}
-		return &TypeConverter_Default{g, tp, g.filedep}
+		return &TypeConverter_Default{g, tp, g.depfile}
 	}
 }
 
@@ -1143,22 +1143,22 @@ func (g *Generator) GetTypeInfoFromParent(parent_tp *fdep.DepType, atype string)
 }
 
 // Returns the source and wrapped namespace.
-func (g *Generator) PhpWrapNS(filedep *fdep.FileDep) (sourceNS string, wrapNS string, wrapPath string) {
-	if filedep == nil {
+func (g *Generator) PhpWrapNS(depfile *fdep.DepFile) (sourceNS string, wrapNS string, wrapPath string) {
+	if depfile == nil {
 		return "", "", ""
 	}
 
-	sourceNS = g.BuildPHPNamespacedName(filedep.ProtoFile.PackageName)
+	sourceNS = g.BuildPHPNamespacedName(depfile.ProtoFile.PackageName)
 	wrapNS = ""
 
 	if g.NSSource != nil {
-		if p, ok := g.NSSource.GetNS(filedep); ok {
+		if p, ok := g.NSSource.GetNS(depfile); ok {
 			wrapNS = p
 		}
 	}
 
 	if wrapNS == "" {
-		for _, o := range filedep.ProtoFile.Options {
+		for _, o := range depfile.ProtoFile.Options {
 			if o.Name == "phpwrap_ns" {
 				wrapNS = o.Value.String()
 			}
@@ -1174,7 +1174,7 @@ func (g *Generator) PhpWrapNS(filedep *fdep.FileDep) (sourceNS string, wrapNS st
 }
 
 func (g *Generator) IsWrap(tp *fdep.DepType) bool {
-	if !g.IsFileWrap(tp.FileDep) || !tp.IsPointer() || tp.FileDep.DepType != fdep.DepType_Own {
+	if !g.IsFileWrap(tp.DepFile) || !tp.IsPointer() || tp.DepFile.DepType != fdep.DepType_Own {
 		return false
 	}
 	return true

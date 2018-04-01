@@ -15,14 +15,14 @@ type TypeConverterPlugin_Time struct {
 }
 
 func (t *TypeConverterPlugin_Time) GetTypeConverter(tp *fdep.DepType) fproto_phpwrap.TypeConverter {
-	if tp.FileDep.FilePath == "google/protobuf/timestamp.proto" &&
-		tp.FileDep.ProtoFile.PackageName == "google.protobuf" &&
+	if tp.DepFile.FilePath == "google/protobuf/timestamp.proto" &&
+		tp.DepFile.ProtoFile.PackageName == "google.protobuf" &&
 		tp.Name == "Timestamp" {
 		return &TypeConverter_Time{}
 	}
 	/*
-		if tp.FileDep.FilePath == "github.com/RangelReale/fproto-wrap/time.proto" &&
-			tp.FileDep.ProtoFile.PackageName == "fproto_wrap" &&
+		if tp.DepFile.FilePath == "github.com/RangelReale/fproto-wrap/time.proto" &&
+			tp.DepFile.ProtoFile.PackageName == "fproto_wrap" &&
 			tp.Name == "NullTime" {
 			return &TypeConverter_NullTime{}
 		}

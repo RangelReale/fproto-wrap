@@ -16,7 +16,7 @@ type TypeNamer_Source struct {
 	//  The type of the source data
 	tp *fdep.DepType
 	// The file where the type is in relation to
-	filedep *fdep.FileDep
+	depfile *fdep.DepFile
 }
 
 func (t *TypeNamer_Source) TypeName(g *GeneratorFile, tntype TypeNameType) string {
@@ -64,7 +64,7 @@ type TypeConverter_Default struct {
 	//  The type of the source data
 	tp *fdep.DepType
 	// The file where the type is in relation to
-	filedep *fdep.FileDep
+	depfile *fdep.DepFile
 }
 
 func (t *TypeConverter_Default) TCID() string {

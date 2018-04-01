@@ -18,8 +18,8 @@ type TypeConverterPlugin_JSONObject struct {
 }
 
 func (t *TypeConverterPlugin_JSONObject) GetTypeConverter(tp *fdep.DepType) fproto_gowrap.TypeConverter {
-	if tp.FileDep.FilePath == "github.com/RangelReale/fproto-wrap/jsonobject.proto" &&
-		tp.FileDep.ProtoFile.PackageName == "fproto_wrap" &&
+	if tp.DepFile.FilePath == "github.com/RangelReale/fproto-wrap/jsonobject.proto" &&
+		tp.DepFile.ProtoFile.PackageName == "fproto_wrap" &&
 		tp.Name == "JSONObject" {
 		return &TypeConverter_JSONObject{}
 	}

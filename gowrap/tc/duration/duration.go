@@ -16,8 +16,8 @@ type TypeConverterPlugin_Duration struct {
 }
 
 func (t *TypeConverterPlugin_Duration) GetTypeConverter(tp *fdep.DepType) fproto_gowrap.TypeConverter {
-	if tp.FileDep.FilePath == "google/protobuf/duration.proto" &&
-		tp.FileDep.ProtoFile.PackageName == "google.protobuf" &&
+	if tp.DepFile.FilePath == "google/protobuf/duration.proto" &&
+		tp.DepFile.ProtoFile.PackageName == "google.protobuf" &&
 		tp.Name == "Duration" {
 		return &TypeConverter_Duration{}
 	}

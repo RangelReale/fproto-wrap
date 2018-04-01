@@ -21,13 +21,13 @@ type TypeConverterPlugin_UUID struct {
 }
 
 func (t *TypeConverterPlugin_UUID) GetTypeConverter(tp *fdep.DepType) fproto_gowrap.TypeConverter {
-	if tp.FileDep.FilePath == "github.com/RangelReale/fproto-wrap/uuid.proto" &&
-		tp.FileDep.ProtoFile.PackageName == "fproto_wrap" &&
+	if tp.DepFile.FilePath == "github.com/RangelReale/fproto-wrap/uuid.proto" &&
+		tp.DepFile.ProtoFile.PackageName == "fproto_wrap" &&
 		tp.Name == "UUID" {
 		return &TypeConverter_UUID{}
 	}
-	if tp.FileDep.FilePath == "github.com/RangelReale/fproto-wrap/uuid.proto" &&
-		tp.FileDep.ProtoFile.PackageName == "fproto_wrap" &&
+	if tp.DepFile.FilePath == "github.com/RangelReale/fproto-wrap/uuid.proto" &&
+		tp.DepFile.ProtoFile.PackageName == "fproto_wrap" &&
 		tp.Name == "NullUUID" {
 		return &TypeConverter_NullUUID{}
 	}

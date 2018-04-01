@@ -44,17 +44,17 @@ func (g *GeneratorFile) HaveData() bool {
 	return g.havedata
 }
 
-// Declares a dependency using a FileDep.
+// Declares a dependency using a DepFile.
 /*
-func (g *GeneratorFile) FileDep(filedep *fdep.FileDep, defalias string, is_gowrap bool) string {
-	if filedep == nil {
-		filedep = g.G().GetFileDep()
+func (g *GeneratorFile) DepFile(depfile *fdep.DepFile, defalias string, is_gowrap bool) string {
+	if depfile == nil {
+		depfile = g.G().GetDepFile()
 	}
 	var p string
-	if is_gowrap && !filedep.IsSamePackage(g.G().GetFileDep()) && g.G().IsFileGowrap(filedep) {
-		p = g.G().GoWrapPackage(filedep)
+	if is_gowrap && !depfile.IsSamePackage(g.G().GetDepFile()) && g.G().IsFileGowrap(depfile) {
+		p = g.G().GoWrapPackage(depfile)
 	} else {
-		p = filedep.GoPackage()
+		p = depfile.GoPackage()
 	}
 	return g.Dep(p, defalias)
 }
@@ -138,7 +138,7 @@ func (g *GeneratorFile) Filename() string {
 }
 
 func (g *GeneratorFile) generateHeader() {
-	_, wrapNS, _ := g.G().PhpWrapNS(g.G().GetFileDep())
+	_, wrapNS, _ := g.G().PhpWrapNS(g.G().GetDepFile())
 
 	g.P("<?php")
 	g.P("namespace ", wrapNS, ";")

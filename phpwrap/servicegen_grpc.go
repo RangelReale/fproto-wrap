@@ -47,7 +47,7 @@ func (s *ServiceGen_gRPC) GenerateService(g *Generator, svc *fproto.ServiceEleme
 		return errors.New("service type not found")
 	}
 
-	sourceNS, _, wrapPath := g.PhpWrapNS(g.GetFileDep())
+	sourceNS, _, wrapPath := g.PhpWrapNS(g.GetDepFile())
 	svcPhpName, svcProtoName := s.BuildServiceClientName(g, svc)
 	fileId := path.Join(wrapPath, svcPhpName)
 
@@ -115,11 +115,11 @@ func (s *ServiceGen_gRPC) GenerateService(g *Generator, svc *fproto.ServiceEleme
 
 		if rpc.StreamsRequest || rpc.StreamsResponse {
 			isRequestObject := "false"
-			if !tp_req.IsScalar() && tp_req.IsPointer() && tp_req.FileDep.DepType == fdep.DepType_Own {
+			if !tp_req.IsScalar() && tp_req.IsPointer() && tp_req.DepFile.DepType == fdep.DepType_Own {
 				isRequestObject = "true"
 			}
 
-			if !tp_resp.IsScalar() && tp_resp.IsPointer() && tp_resp.FileDep.DepType == fdep.DepType_Own {
+			if !tp_resp.IsScalar() && tp_resp.IsPointer() && tp_resp.DepFile.DepType == fdep.DepType_Own {
 				gf.P("$resp_obj = new ", tinfo_resp.Converter().TypeName(gf, TNT_NS_TYPENAME), "();")
 			} else {
 				gf.P("$resp_obj = null;")
@@ -130,7 +130,7 @@ func (s *ServiceGen_gRPC) GenerateService(g *Generator, svc *fproto.ServiceEleme
 			} else if rpc.StreamsRequest {
 				gf.P("return new \\RangelReale\\FPWrap\\ClientStreamingCall($this->client->", rpcName, "($metadata, $options), ", isRequestObject, ", $resp_obj);")
 			} else {
-				if !tp_req.IsScalar() && tp_req.IsPointer() && tp_req.FileDep.DepType == fdep.DepType_Own {
+				if !tp_req.IsScalar() && tp_req.IsPointer() && tp_req.DepFile.DepType == fdep.DepType_Own {
 					gf.P("$rreq = $argument->export();")
 				} else {
 					gf.P("$rreq = $argument;")
@@ -138,7 +138,7 @@ func (s *ServiceGen_gRPC) GenerateService(g *Generator, svc *fproto.ServiceEleme
 				gf.P("return new \\RangelReale\\FPWrap\\ServerStreamingCall($this->client->", rpcName, "($rreq, $metadata, $options), $resp_obj);")
 			}
 		} else {
-			if !tp_req.IsScalar() && tp_req.IsPointer() && tp_req.FileDep.DepType == fdep.DepType_Own {
+			if !tp_req.IsScalar() && tp_req.IsPointer() && tp_req.DepFile.DepType == fdep.DepType_Own {
 				gf.P("$rreq = $argument->export();")
 			} else {
 				gf.P("$rreq = $argument;")
@@ -146,7 +146,7 @@ func (s *ServiceGen_gRPC) GenerateService(g *Generator, svc *fproto.ServiceEleme
 
 			gf.P("$resp_call = $this->client->", fproto_wrap.CamelCase(rpc.Name), "($rreq, $metadata, $options);")
 
-			if !tp_resp.IsScalar() && tp_resp.IsPointer() && tp_resp.FileDep.DepType == fdep.DepType_Own {
+			if !tp_resp.IsScalar() && tp_resp.IsPointer() && tp_resp.DepFile.DepType == fdep.DepType_Own {
 				gf.P("$resp_obj = new ", tinfo_resp.Converter().TypeName(gf, TNT_NS_TYPENAME), "();")
 			} else {
 				gf.P("$resp_obj = null;")
