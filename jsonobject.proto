@@ -1,7 +1,0 @@
-syntax = "proto3";
-package fproto_wrap;
-option go_package = "github.com/RangelReale/fproto-wrap/gowrap/gwproto";
-
-message JSONObject {
-    string value = 1;
-}
