@@ -249,6 +249,8 @@ func (g *GeneratorFile) P(str ...interface{}) {
 			fmt.Fprintf(g, "%g", s)
 		case *float64:
 			fmt.Fprintf(g, "%g", *s)
+		case fmt.Stringer:
+			fmt.Fprintf(g, "%s", s.String())
 		default:
 			panic(fmt.Sprintf("unknown type in printer: %T", v))
 		}
