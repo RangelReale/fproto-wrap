@@ -865,7 +865,7 @@ func RegisterUserSvcServer(s *grpc.Server, srv UserSvcServer, opts ...fproto_gow
 
 ### related
 
- * [https://github.com/RangelReale/fproto](https://github.com/RangelReale/fproto)
+ * [https://github.com/RangelReale/fdep](https://github.com/RangelReale/fdep)
     The protobuf file parser used in this package.
  * [https://github.com/RangelReale/fproto-wrap-validator](https://github.com/RangelReale/fproto-wrap-validator)
     Validator generation customizer.
