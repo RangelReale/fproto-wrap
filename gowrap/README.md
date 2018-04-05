@@ -403,11 +403,11 @@ var User_Address_AddressType_value = core.User_Address_AddressType_value
 // MESSAGE: User
 //
 type User struct {
-	Id        uuid.UUID     `json:"id,omitempty" sql:"id,omitempty"`
-	Name      string        `json:"name,omitempty" sql:"name,omitempty"`
-	Email     string        `json:"email,omitempty" sql:"email,omitempty"`
-	DtCreated time.Time     `json:"dt_created,omitempty" sql:"dt_created,omitempty"`
-	Address   *User_Address `json:"address,omitempty" sql:"address,omitempty"`
+	Id        uuid.UUID     `json:"id,omitempty"`
+	Name      string        `json:"name,omitempty"`
+	Email     string        `json:"email,omitempty"`
+	DtCreated time.Time     `json:"dt_created,omitempty"`
+	Address   *User_Address `json:"address,omitempty"`
 }
 
 //
@@ -480,8 +480,8 @@ func (m *User) Export() (*core.User, error) {
 // MESSAGE: User.Address
 //
 type User_Address struct {
-	AddressType User_Address_AddressType `json:"address_type,omitempty" sql:"address_type,omitempty"`
-	Address     string                   `json:"address,omitempty" sql:"address,omitempty"`
+	AddressType User_Address_AddressType `json:"address_type,omitempty"`
+	Address     string                   `json:"address,omitempty"`
 }
 
 //
@@ -522,7 +522,7 @@ func (m *User_Address) Export() (*core.User_Address, error) {
 // MESSAGE: UserListResponse
 //
 type UserListResponse struct {
-	List []*User `json:"list,omitempty" sql:"list,omitempty"`
+	List []*User `json:"list,omitempty"`
 }
 
 //
