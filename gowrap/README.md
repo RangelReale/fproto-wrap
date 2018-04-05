@@ -10,18 +10,16 @@ The Go generated protobuf source code isn't very developer-friendly. Well-known 
 
 This package creates objects that wrap the generated Go types into easier to use ones, and converts between them automatically.
 
-Type converters can be plugged in to support converting any type, like UUIDs or your application internal types.
-Included are plugins for time.Time, time.Duration, and UUID.
+Type converters can be plugged in to support converting any type, like UUIDs, time, or your application internal types.
 
 Customizers can be used to inject your own generated code into any file, using the same tools that the library uses for its processing.
-Included is a customizer that adds json tags to all struct fields.
 
 Service types can be generated using plugins, and a gRPC one is provided.
 
 The gRPC service wrapper creates new structs with the same name as the original ones that uses the new wrapped types, and automatically calls the original Go generated ones, autmatically converting the structs between the formats.
 
-The intended use of this package is that you create your own gowrap executable with the plugins you need, and call it on your application.
-No default executable is provided.
+There is a sample wrapper generation executable at [fproto-gen-go](https://github.com/RangelReale/fproto-wrap/tree/master/gowrap/fproto-gen-go).
+If you need to use type converters or customizers (which should be most of the time), is is recommended that you create your own generation executable.
 
 ### example
 
@@ -772,7 +770,9 @@ func RegisterUserSvcServer(s *grpc.Server, srv UserSvcServer) {
 
  * [https://github.com/RangelReale/fproto](https://github.com/RangelReale/fproto)
     The protobuf file parser used in this package.
-	
+ * [https://github.com/RangelReale/fproto-wrap-validator](https://github.com/RangelReale/fproto-wrap-validator)
+    Validator generation customizer.
+
 ### author
 
 Rangel Reale (rangelspam@gmail.com)
