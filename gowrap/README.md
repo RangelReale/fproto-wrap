@@ -1,4 +1,4 @@
-# fproto-gowrap
+# fproto-gowrap - Golang
 
 [![GoDoc](https://godoc.org/github.com/RangelReale/fproto-wrap/gowrap?status.svg)](https://godoc.org/github.com/RangelReale/fproto-wrap/gowrap)
 
