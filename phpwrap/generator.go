@@ -413,7 +413,16 @@ func (g *Generator) GenerateMessage(message *fproto.MessageElement) error {
 		gf.GenerateCommentLine("MESSAGE: ", msProtoName)
 	}
 
-	gf.P("class ", msPhpName)
+	// CUSTOMIZER
+	cz := &wrapCustomizers{g.Customizers}
+
+	// get base class
+	msgBaseClass, mbcok := cz.GetBaseClass(g, tp_msg)
+	if mbcok {
+		gf.P("class ", msPhpName, " extends ", msgBaseClass)
+	} else {
+		gf.P("class ", msPhpName)
+	}
 	gf.P("{")
 	gf.In()
 
@@ -519,6 +528,9 @@ func (g *Generator) GenerateMessage(message *fproto.MessageElement) error {
 	gf.P("{")
 	gf.In()
 
+	if mbcok {
+		gf.P("parent::__construct();")
+	}
 	gf.P("$this->importValues($values);")
 
 	gf.Out()
@@ -688,6 +700,12 @@ func (g *Generator) GenerateMessage(message *fproto.MessageElement) error {
 	gf.P("}")
 
 	gf.P()
+
+	// customizer
+	err := cz.GenerateClassCode(g, tp_msg)
+	if err != nil {
+		return err
+	}
 
 	// end class
 	gf.Out()

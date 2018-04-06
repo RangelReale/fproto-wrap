@@ -192,6 +192,30 @@ func (c *wrapCustomizers) GenerateServiceCode(g *Generator) error {
 	return nil
 }
 
+func (c *wrapCustomizers) GetBaseClass(g *Generator, tp *fdep.DepType) (string, bool) {
+	for _, cz := range c.customizers {
+		if bc, bcok := cz.(CustomizerClass); bcok {
+			baseclass, is_baseclass := bc.GetBaseClass(g, tp)
+			if is_baseclass {
+				return baseclass, true
+			}
+		}
+	}
+	return "", false
+}
+
+func (c *wrapCustomizers) GenerateClassCode(g *Generator, tp *fdep.DepType) error {
+	for _, cz := range c.customizers {
+		if bc, bcok := cz.(CustomizerClass); bcok {
+			err := bc.GenerateClassCode(g, tp)
+			if err != nil {
+				return err
+			}
+		}
+	}
+	return nil
+}
+
 //
 // FileOutput: Default
 //
