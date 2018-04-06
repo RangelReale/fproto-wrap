@@ -348,6 +348,13 @@ func (g *Generator) GenerateMessages() error {
 	return nil
 }
 
+func (g *Generator) EscapePHPKeyword(name string) string {
+	if strings.ToLower(name) == "empty" {
+		return "GPB" + name
+	}
+	return name
+}
+
 func (g *Generator) BuildMessageName(message *fproto.MessageElement) (phpName string, protoName string) {
 	// get the dep type
 	tp_message := g.dep.DepTypeFromElement(message)
@@ -356,7 +363,7 @@ func (g *Generator) BuildMessageName(message *fproto.MessageElement) (phpName st
 	}
 
 	// Camel-cased name, with "." replaced by "_"
-	phpName = fproto_wrap.CamelCaseProto(tp_message.Name)
+	phpName = fproto_wrap.CamelCaseProto(g.EscapePHPKeyword(tp_message.Name))
 
 	protoName = tp_message.Name
 
@@ -368,7 +375,7 @@ func (g *Generator) BuildMessageNSName(tp *fdep.DepType) (sourceName string, wra
 	sourceNS, wrapNS, _ := g.PhpWrapNS(tp.DepFile)
 
 	// Camel-cased name, with "." replaced by "_"
-	phpName := fproto_wrap.CamelCaseProto(tp.Name)
+	phpName := fproto_wrap.CamelCaseProto(g.EscapePHPKeyword(tp.Name))
 
 	sourceName = fmt.Sprintf("\\%s\\%s", sourceNS, phpName)
 	wrapName = fmt.Sprintf("\\%s\\%s", wrapNS, phpName)
