@@ -312,6 +312,11 @@ func (g *Generator) GenerateEnums() error {
 }
 
 func (g *Generator) GenerateEnum(enum *fproto.EnumElement) error {
+	tp_enum := g.dep.DepTypeFromElement(enum)
+	if tp_enum == nil {
+		return errors.New("enum type not found")
+	}
+
 	sourceNS, _, wrapPath := g.PhpWrapNS(g.depfile)
 	enPhpName, enProtoName := g.BuildEnumName(enum)
 	fileId := path.Join(wrapPath, enPhpName)
@@ -326,10 +331,21 @@ func (g *Generator) GenerateEnum(enum *fproto.EnumElement) error {
 		gf.GenerateCommentLine("ENUM: ", enProtoName)
 	}
 
+	// CUSTOMIZER
+	cz := &wrapCustomizers{g.Customizers}
+
 	// only inherit from the source class
 	gf.P("class ", enPhpName, " extends \\", sourceNS, "\\", enPhpName)
 	gf.P("{")
 	gf.In()
+
+	//
+	// CUSTOMIZER
+	//
+	err := cz.GenerateClassCode(g, tp_enum)
+	if err != nil {
+		return err
+	}
 
 	gf.Out()
 	gf.P("}")
@@ -701,7 +717,9 @@ func (g *Generator) GenerateMessage(message *fproto.MessageElement) error {
 
 	gf.P()
 
-	// customizer
+	//
+	// CUSTOMIZER
+	//
 	err := cz.GenerateClassCode(g, tp_msg)
 	if err != nil {
 		return err

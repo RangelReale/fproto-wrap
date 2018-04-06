@@ -61,7 +61,16 @@ func (s *ServiceGen_gRPC) GenerateService(g *Generator, svc *fproto.ServiceEleme
 		gf.GenerateCommentLine("SERVICE: ", svcProtoName)
 	}
 
-	gf.P("class ", svcPhpName)
+	// CUSTOMIZER
+	cz := &wrapCustomizers{g.Customizers}
+
+	// get base class
+	svcBaseClass, sbcok := cz.GetBaseClass(g, tp_svc)
+	if sbcok {
+		gf.P("class ", svcPhpName, " extends ", svcBaseClass)
+	} else {
+		gf.P("class ", svcPhpName)
+	}
 	gf.P("{")
 	gf.In()
 
@@ -157,6 +166,14 @@ func (s *ServiceGen_gRPC) GenerateService(g *Generator, svc *fproto.ServiceEleme
 
 		gf.Out()
 		gf.P("}")
+	}
+
+	//
+	// CUSTOMIZER
+	//
+	err := cz.GenerateClassCode(g, tp_svc)
+	if err != nil {
+		return err
 	}
 
 	// finish class
