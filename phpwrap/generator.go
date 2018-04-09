@@ -631,13 +631,9 @@ func (g *Generator) GenerateMessage(message *fproto.MessageElement) error {
 	gf.P("foreach ($values as $vname => $vvalue) {")
 	gf.In()
 
-	for fidx, fld := range message.Fields {
+	pprefix := ""
+	for _, fld := range message.Fields {
 		fldname, _, fldsetter := g.BuildFieldName(fld)
-
-		pprefix := ""
-		if fidx > 0 {
-			pprefix = "} else "
-		}
 
 		switch xfld := fld.(type) {
 		case *fproto.FieldElement, *fproto.MapFieldElement:
@@ -645,6 +641,8 @@ func (g *Generator) GenerateMessage(message *fproto.MessageElement) error {
 			gf.In()
 			gf.P("$this->", fldsetter, "($vvalue);")
 			gf.Out()
+
+			pprefix = "} else "
 		case *fproto.OneOfFieldElement:
 			for _, oofld := range xfld.Fields {
 				oofldname, _, oofldsetter := g.BuildFieldName(oofld)
@@ -653,9 +651,10 @@ func (g *Generator) GenerateMessage(message *fproto.MessageElement) error {
 				gf.In()
 				gf.P("$this->", oofldsetter, "($vvalue);")
 				gf.Out()
+
+				pprefix = "} else "
 			}
 		}
-
 	}
 
 	if len(message.Fields) > 0 {
