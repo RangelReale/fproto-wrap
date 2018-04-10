@@ -20,9 +20,10 @@ import (
 
 // A single generated output file
 type GeneratorFile struct {
-	generator *Generator
-	FileId    string
-	Suffix    string
+	generator     *Generator
+	FileId        string
+	Suffix        string
+	FixedFilename string
 
 	*bytes.Buffer
 	indent string
@@ -40,6 +41,18 @@ func NewGeneratorFile(generator *Generator, fileId string, suffix string) *Gener
 		Buffer:    new(bytes.Buffer),
 		imports:   make(map[string]string),
 		havedata:  false,
+	}
+}
+
+// Creates a new generator file with fixed filename
+func NewGeneratorFileFixed(generator *Generator, fileId string, filename string) *GeneratorFile {
+	return &GeneratorFile{
+		generator:     generator,
+		FileId:        fileId,
+		FixedFilename: filename,
+		Buffer:        new(bytes.Buffer),
+		imports:       make(map[string]string),
+		havedata:      false,
 	}
 }
 
@@ -160,6 +173,10 @@ func (g *GeneratorFile) Output(w io.Writer) error {
 
 // Returns the expected output file path and name
 func (g *GeneratorFile) Filename() string {
+	if g.FixedFilename != "" {
+		return g.FixedFilename
+	}
+
 	p := g.G().GoWrapPackage(g.G().GetDepFile())
 	return path.Join(p, strings.TrimSuffix(path.Base(g.G().GetDepFile().FilePath), path.Ext(g.G().GetDepFile().FilePath))+g.Suffix+".fwpb.go")
 }

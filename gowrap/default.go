@@ -22,7 +22,7 @@ type TypeNamer_Source struct {
 }
 
 // Gets the type name in relation to the current file
-func (t *TypeNamer_Source) TypeName(g *GeneratorFile, tntype TypeNameType) string {
+func (t *TypeNamer_Source) TypeName(g *GeneratorFile, tntype TypeNameType, options uint32) string {
 	ret := ""
 
 	switch tntype {
@@ -74,7 +74,7 @@ type TypeNamer_Scalar struct {
 }
 
 // Gets the type name in relation to the current file
-func (t *TypeNamer_Scalar) TypeName(g *GeneratorFile, tntype TypeNameType) string {
+func (t *TypeNamer_Scalar) TypeName(g *GeneratorFile, tntype TypeNameType, options uint32) string {
 	var ret string
 
 	switch tntype {
@@ -113,7 +113,7 @@ func (t *TypeConverter_Default) TCID() TCID {
 	return TCID_DEFAULT
 }
 
-func (t *TypeConverter_Default) TypeName(g *GeneratorFile, tntype TypeNameType) string {
+func (t *TypeConverter_Default) TypeName(g *GeneratorFile, tntype TypeNameType, options uint32) string {
 	ret := ""
 
 	switch tntype {
@@ -138,7 +138,7 @@ func (t *TypeConverter_Default) TypeName(g *GeneratorFile, tntype TypeNameType) 
 	// get Go type name
 	goTypeName, _ := g.G().BuildTypeName(t.tp)
 
-	if t.tp.DepFile.IsSamePackage(t.depfile) {
+	if !(options&TNO_FORCE_USE_PACKAGE == TNO_FORCE_USE_PACKAGE) && t.tp.DepFile.IsSamePackage(t.depfile) {
 		ret += fmt.Sprintf("%s", goTypeName)
 	} else {
 		falias := g.DeclFileDep(t.tp.DepFile, t.tp.Alias, true)
@@ -219,7 +219,7 @@ func (t *TypeConverter_Scalar) TCID() TCID {
 	return TCID_SCALAR
 }
 
-func (t *TypeConverter_Scalar) TypeName(g *GeneratorFile, tntype TypeNameType) string {
+func (t *TypeConverter_Scalar) TypeName(g *GeneratorFile, tntype TypeNameType, options uint32) string {
 	var ret string
 
 	switch tntype {

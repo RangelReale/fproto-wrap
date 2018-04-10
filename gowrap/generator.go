@@ -80,6 +80,12 @@ func (g *Generator) SetFile(fileId string, suffix string) {
 	delete(g.FilesAlias, fileId)
 }
 
+// Creates a new file with fixed filename
+func (g *Generator) SetFileFixed(fileId string, filename string) {
+	g.Files[fileId] = NewGeneratorFileFixed(g, fileId, filename)
+	delete(g.FilesAlias, fileId)
+}
+
 // Sets one file as alias of another
 func (g *Generator) SetFileAlias(fileId string, sourceFileId string) {
 	g.FilesAlias[fileId] = sourceFileId
@@ -309,7 +315,7 @@ func (g *Generator) generateMessage(message *fproto.MessageElement) error {
 				tctn = TNT_TYPENAME
 			}
 
-			g.FMain().P(fldGoName, " ", type_prefix, tinfo.Converter().TypeName(g.FMain(), tctn), field_tag.OutputWithSpace())
+			g.FMain().P(fldGoName, " ", type_prefix, tinfo.Converter().TypeName(g.FMain(), tctn, 0), field_tag.OutputWithSpace())
 		case *fproto.MapFieldElement:
 			// fieldname map[keytype]fieldtype
 			g.FMain().GenerateComment(xfld.Comment)
@@ -323,7 +329,7 @@ func (g *Generator) generateMessage(message *fproto.MessageElement) error {
 				return err
 			}
 
-			g.FMain().P(fldGoName, " map[", tinfokey.Converter().TypeName(g.FMain(), TNT_TYPENAME), "]", tinfo.Converter().TypeName(g.FMain(), TNT_TYPENAME), field_tag.OutputWithSpace())
+			g.FMain().P(fldGoName, " map[", tinfokey.Converter().TypeName(g.FMain(), TNT_TYPENAME, 0), "]", tinfo.Converter().TypeName(g.FMain(), TNT_TYPENAME, 0), field_tag.OutputWithSpace())
 		case *fproto.OneOfFieldElement:
 			// fieldname isSTRUCT_ONEOF
 			g.FMain().GenerateComment(xfld.Comment)
@@ -374,7 +380,7 @@ func (g *Generator) generateMessage(message *fproto.MessageElement) error {
 			if xfld.Repeated {
 				g.FImpExp().P("for _, ms := range s.", fldGoName, " {")
 				g.FImpExp().In()
-				g.FImpExp().P("var msi ", tinfo.Converter().TypeName(g.FImpExp(), TNT_TYPENAME))
+				g.FImpExp().P("var msi ", tinfo.Converter().TypeName(g.FImpExp(), TNT_TYPENAME, 0))
 
 				source_field = "ms"
 				dest_field = "msi"
@@ -403,7 +409,7 @@ func (g *Generator) generateMessage(message *fproto.MessageElement) error {
 
 			g.FImpExp().P("for msidx, ms := range s.", fldGoName, " {")
 			g.FImpExp().In()
-			g.FImpExp().P("var msi ", tinfo.Converter().TypeName(g.FImpExp(), TNT_TYPENAME))
+			g.FImpExp().P("var msi ", tinfo.Converter().TypeName(g.FImpExp(), TNT_TYPENAME, 0))
 
 			check_error, err := tinfo.Converter().GenerateImport(g.FImpExp(), "ms", "msi", "err")
 			if err != nil {
@@ -483,7 +489,7 @@ func (g *Generator) generateMessage(message *fproto.MessageElement) error {
 			if xfld.Repeated {
 				g.FImpExp().P("for _, ms := range m.", fldGoName, " {")
 				g.FImpExp().In()
-				g.FImpExp().P("var msi ", tinfo.Source().TypeName(g.FImpExp(), TNT_TYPENAME))
+				g.FImpExp().P("var msi ", tinfo.Source().TypeName(g.FImpExp(), TNT_TYPENAME, 0))
 
 				source_field = "ms"
 				dest_field = "msi"
@@ -513,7 +519,7 @@ func (g *Generator) generateMessage(message *fproto.MessageElement) error {
 
 			g.FImpExp().P("for msidx, ms := range m.", fldGoName, " {")
 			g.FImpExp().In()
-			g.FImpExp().P("var msi ", tinfo.Source().TypeName(g.FImpExp(), TNT_TYPENAME))
+			g.FImpExp().P("var msi ", tinfo.Source().TypeName(g.FImpExp(), TNT_TYPENAME, 0))
 
 			check_error, err := tinfo.Converter().GenerateExport(g.FImpExp(), "ms", "msi", "err")
 			if err != nil {
@@ -742,7 +748,7 @@ func (g *Generator) generateOneOf(oneof *fproto.OneOfFieldElement) error {
 			g.FMain().In()
 
 			// fieldname fieldtype
-			g.FMain().P(fldGoName, " ", tinfo.Converter().TypeName(g.FMain(), TNT_TYPENAME), field_tag.OutputWithSpace())
+			g.FMain().P(fldGoName, " ", tinfo.Converter().TypeName(g.FMain(), TNT_TYPENAME, 0), field_tag.OutputWithSpace())
 
 			g.FMain().Out()
 			g.FMain().P("}")
