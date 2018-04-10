@@ -113,7 +113,7 @@ func (s *ServiceGen_gRPC) GenerateService(g *Generator, svc *fproto.ServiceEleme
 		gf.P()
 
 		if !rpc.StreamsRequest {
-			gf.P("public function ", rpcName, "(", tinfo_req.Converter().TypeName(gf, TNT_NS_TYPENAME), " $argument,")
+			gf.P("public function ", rpcName, "(", tinfo_req.Converter().TypeName(gf, TNT_NS_TYPENAME, 0), " $argument,")
 			gf.In()
 			gf.P("$metadata = [], $options = []) {")
 
@@ -129,7 +129,7 @@ func (s *ServiceGen_gRPC) GenerateService(g *Generator, svc *fproto.ServiceEleme
 			}
 
 			if !tp_resp.IsScalar() && tp_resp.IsPointer() && tp_resp.DepFile.DepType == fdep.DepType_Own {
-				gf.P("$resp_obj = new ", tinfo_resp.Converter().TypeName(gf, TNT_NS_TYPENAME), "();")
+				gf.P("$resp_obj = new ", tinfo_resp.Converter().TypeName(gf, TNT_NS_TYPENAME, 0), "();")
 			} else {
 				gf.P("$resp_obj = null;")
 			}
@@ -156,7 +156,7 @@ func (s *ServiceGen_gRPC) GenerateService(g *Generator, svc *fproto.ServiceEleme
 			gf.P("$resp_call = $this->client->", fproto_wrap.CamelCase(rpc.Name), "($rreq, $metadata, $options);")
 
 			if !tp_resp.IsScalar() && tp_resp.IsPointer() && tp_resp.DepFile.DepType == fdep.DepType_Own {
-				gf.P("$resp_obj = new ", tinfo_resp.Converter().TypeName(gf, TNT_NS_TYPENAME), "();")
+				gf.P("$resp_obj = new ", tinfo_resp.Converter().TypeName(gf, TNT_NS_TYPENAME, 0), "();")
 			} else {
 				gf.P("$resp_obj = null;")
 			}

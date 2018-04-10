@@ -407,7 +407,7 @@ func (g *Generator) GenerateMessage(message *fproto.MessageElement) error {
 				return err
 			}
 
-			wrapFieldTypeName := tinfo.Converter().TypeName(gf, TNT_NS_TYPENAME)
+			wrapFieldTypeName := tinfo.Converter().TypeName(gf, TNT_NS_TYPENAME, 0)
 
 			gf.GenerateFieldComment(fld, []string{
 				fmt.Sprintf("@var %s", wrapFieldTypeName),
@@ -426,8 +426,8 @@ func (g *Generator) GenerateMessage(message *fproto.MessageElement) error {
 				return err
 			}
 
-			wrapFieldTypeName := tinfo.Converter().TypeName(gf, TNT_NS_TYPENAME)
-			wrapKeyFieldTypeName := tinfokey.Converter().TypeName(gf, TNT_NS_TYPENAME)
+			wrapFieldTypeName := tinfo.Converter().TypeName(gf, TNT_NS_TYPENAME, 0)
+			wrapKeyFieldTypeName := tinfokey.Converter().TypeName(gf, TNT_NS_TYPENAME, 0)
 
 			gf.GenerateFieldComment(fld, []string{
 				fmt.Sprintf("@var %s[] key => %s", wrapFieldTypeName, wrapKeyFieldTypeName),
@@ -453,7 +453,7 @@ func (g *Generator) GenerateMessage(message *fproto.MessageElement) error {
 						return err
 					}
 
-					wrapOOFieldTypeName := ootinfo.Converter().TypeName(gf, TNT_NS_TYPENAME)
+					wrapOOFieldTypeName := ootinfo.Converter().TypeName(gf, TNT_NS_TYPENAME, 0)
 
 					if xoofld.Repeated {
 						wrapOOFieldTypeName += "[]"
@@ -475,8 +475,8 @@ func (g *Generator) GenerateMessage(message *fproto.MessageElement) error {
 						return err
 					}
 
-					wrapOOFieldTypeName := ootinfo.Converter().TypeName(gf, TNT_NS_TYPENAME)
-					wrapOOKeyFieldTypeName := ootinfokey.Converter().TypeName(gf, TNT_NS_TYPENAME)
+					wrapOOFieldTypeName := ootinfo.Converter().TypeName(gf, TNT_NS_TYPENAME, 0)
+					wrapOOKeyFieldTypeName := ootinfokey.Converter().TypeName(gf, TNT_NS_TYPENAME, 0)
 
 					gf.GenerateFieldComment(oofld, []string{
 						fmt.Sprintf("@var %s[] key => %s", wrapOOFieldTypeName, wrapOOKeyFieldTypeName),
@@ -695,7 +695,7 @@ func (g *Generator) generateFieldGetterSetter(gf *GeneratorFile, parent_type *fd
 			return err
 		}
 
-		wrapFieldTypeName := tinfo.Converter().TypeName(gf, TNT_NS_TYPENAME)
+		wrapFieldTypeName := tinfo.Converter().TypeName(gf, TNT_NS_TYPENAME, 0)
 		if xfld.Repeated {
 			wrapFieldTypeName += "[]"
 		}
@@ -752,8 +752,8 @@ func (g *Generator) generateFieldGetterSetter(gf *GeneratorFile, parent_type *fd
 			return err
 		}
 
-		wrapFieldTypeName := tinfo.Converter().TypeName(gf, TNT_NS_TYPENAME)
-		wrapKeyFieldTypeName := tinfokey.Converter().TypeName(gf, TNT_NS_TYPENAME)
+		wrapFieldTypeName := tinfo.Converter().TypeName(gf, TNT_NS_TYPENAME, 0)
+		wrapKeyFieldTypeName := tinfokey.Converter().TypeName(gf, TNT_NS_TYPENAME, 0)
 
 		gf.GenerateFieldComment(fld, []string{
 			fmt.Sprintf("@return %s[] key => %s", wrapFieldTypeName, wrapKeyFieldTypeName),

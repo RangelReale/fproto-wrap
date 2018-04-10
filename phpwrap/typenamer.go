@@ -12,7 +12,7 @@ const (
 
 type TypeNamer interface {
 	// Gets the type name in relation to the current file
-	TypeName(g *GeneratorFile, tntype TypeNameType) string
+	TypeName(g *GeneratorFile, tntype TypeNameType, options uint32) string
 
 	// Returns if the underlining type is scalar
 	IsScalar() bool

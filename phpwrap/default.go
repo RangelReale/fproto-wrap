@@ -19,7 +19,7 @@ type TypeNamer_Source struct {
 	depfile *fdep.DepFile
 }
 
-func (t *TypeNamer_Source) TypeName(g *GeneratorFile, tntype TypeNameType) string {
+func (t *TypeNamer_Source) TypeName(g *GeneratorFile, tntype TypeNameType, options uint32) string {
 	switch tntype {
 	case TNT_NS_TYPENAME:
 		sourceFieldTypeName, _ := g.G().BuildTypeNSName(t.tp)
@@ -42,7 +42,7 @@ type TypeNamer_Scalar struct {
 	tp *fdep.DepType
 }
 
-func (t *TypeNamer_Scalar) TypeName(g *GeneratorFile, tntype TypeNameType) string {
+func (t *TypeNamer_Scalar) TypeName(g *GeneratorFile, tntype TypeNameType, options uint32) string {
 	return ScalarToPhp(*t.tp.ScalarType)
 }
 
@@ -71,7 +71,7 @@ func (t *TypeConverter_Default) TCID() TCID {
 	return TCID_DEFAULT
 }
 
-func (t *TypeConverter_Default) TypeName(g *GeneratorFile, tntype TypeNameType) string {
+func (t *TypeConverter_Default) TypeName(g *GeneratorFile, tntype TypeNameType, options uint32) string {
 	switch tntype {
 	case TNT_NS_TYPENAME:
 		sourceFieldTypeName, wrapFieldTypeName := g.G().BuildTypeNSName(t.tp)
@@ -130,7 +130,7 @@ func (t *TypeConverter_Scalar) TCID() TCID {
 	return TCID_SCALAR
 }
 
-func (t *TypeConverter_Scalar) TypeName(g *GeneratorFile, tntype TypeNameType) string {
+func (t *TypeConverter_Scalar) TypeName(g *GeneratorFile, tntype TypeNameType, options uint32) string {
 	return ScalarToPhp(*t.tp.ScalarType)
 }
 
