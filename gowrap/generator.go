@@ -917,3 +917,14 @@ func (g *Generator) GoWrapPackage(depfile *fdep.DepFile) string {
 	}
 	return path.Join("fpwrap", path.Dir(depfile.FilePath))
 }
+
+// Returns the wrapped file package name.
+func (g *Generator) GoWrapFilePackage(depfile *fdep.DepFile) string {
+	if g.PkgSource != nil {
+		if p, ok := g.PkgSource.GetFilePkg(depfile); ok {
+			return p
+		}
+	}
+
+	return "fw" + fproto_wrap.BaseName(g.GoWrapPackage(depfile))
+}
