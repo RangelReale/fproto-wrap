@@ -79,7 +79,7 @@ func (g *GeneratorFile) DeclFileDep(depfile *fdep.DepFile, defalias string, is_g
 		}
 	}
 	var p string
-	if is_gowrap && !depfile.IsSamePackage(g.G().GetDepFile()) && g.G().IsFileWrap(depfile) {
+	if is_gowrap && g.G().IsFileWrap(depfile) {
 		p = g.G().GoWrapPackage(depfile)
 	} else {
 		p = depfile.GoPackage()
