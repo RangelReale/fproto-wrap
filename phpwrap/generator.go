@@ -121,53 +121,6 @@ func (g *Generator) BuildPHPNamespacedName(name string) string {
 	return strings.Join(g.BuildPHPNamespacedNameArray(name), "\\")
 }
 
-// Return an array of scopes of the element, NOT including the element itself
-func (g *Generator) GetScope(element fproto.FProtoElement) []string {
-	var ret []string
-	isfirst := true
-	cur := element
-	for cur != nil {
-		switch el := cur.(type) {
-		case *fproto.MessageElement:
-			if !isfirst {
-				ret = append(ret, el.Name)
-			}
-			cur = el.Parent
-		case *fproto.EnumElement:
-			if !isfirst {
-				ret = append(ret, el.Name)
-			}
-			cur = el.Parent
-		case *fproto.OneOfFieldElement:
-			if !isfirst {
-				ret = append(ret, el.Name)
-			}
-			cur = el.Parent
-		case *fproto.EnumConstantElement:
-			if !isfirst {
-				ret = append(ret, el.Name)
-			}
-			cur = el.Parent
-		case *fproto.FieldElement:
-			// don't add to list
-			cur = el.Parent
-		case *fproto.MapFieldElement:
-			// don't add to list
-			cur = el.Parent
-		default:
-			cur = nil
-		}
-		isfirst = false
-	}
-
-	// reverse order
-	if ret != nil {
-		return fproto.ReverseStr(ret)
-	}
-
-	return ret
-}
-
 // Executes the generator
 func (g *Generator) Generate() error {
 	// CUSTOMIZER
