@@ -894,6 +894,16 @@ func (g *Generator) GetTypeInfoFromParent(parent_tp *fdep.DepType, atype string)
 	return g.GetTypeInfo(tp), nil
 }
 
+// Returns the source package name.
+func (g *Generator) GoPackage(depfile *fdep.DepFile) string {
+	for _, o := range depfile.ProtoFile.Options {
+		if o.Name == "go_package" {
+			return o.Value.String()
+		}
+	}
+	return path.Dir(depfile.FilePath)
+}
+
 // Returns the wrapped package name.
 func (g *Generator) GoWrapPackage(depfile *fdep.DepFile) string {
 	if g.PkgSource != nil {
@@ -909,13 +919,17 @@ func (g *Generator) GoWrapPackage(depfile *fdep.DepFile) string {
 	}
 
 	// prepend "fpwrap"
-
 	for _, o := range depfile.ProtoFile.Options {
 		if o.Name == "go_package" {
 			return path.Join("fpwrap", o.Value.String())
 		}
 	}
 	return path.Join("fpwrap", path.Dir(depfile.FilePath))
+}
+
+// Returns the source file package name.
+func (g *Generator) GoFilePackage(depfile *fdep.DepFile) string {
+	return fproto_wrap.BaseName(g.GoWrapPackage(depfile))
 }
 
 // Returns the wrapped file package name.
