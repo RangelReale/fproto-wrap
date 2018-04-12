@@ -15,3 +15,8 @@ type Customizer_Tag interface {
 	// Allows adding tags for a generated struct field. Use the currentTag field to read and edit the tags.
 	GetTag(g *Generator, currentTag *StructTag, parentItem fproto.FProtoElement, item fproto.FProtoElement) error
 }
+
+type Customizer_Global interface {
+	// Allows generation of files independent of an specific proto file
+	GenerateGlobalCode(g *Generator) error
+}

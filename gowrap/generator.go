@@ -50,12 +50,7 @@ type Generator struct {
 }
 
 // Creates a new generator for the file path.
-func NewGenerator(dep *fdep.Dep, filepath string) (*Generator, error) {
-	depfile, ok := dep.Files[filepath]
-	if !ok {
-		return nil, fmt.Errorf("File %s not found", filepath)
-	}
-
+func NewGenerator(dep *fdep.Dep, depfile *fdep.DepFile) (*Generator, error) {
 	ret := &Generator{
 		dep:        dep,
 		depfile:    depfile,
