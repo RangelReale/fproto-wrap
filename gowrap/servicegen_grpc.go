@@ -216,7 +216,7 @@ func (s *ServiceGen_gRPC) GenerateService(g *Generator, svc *fproto.ServiceEleme
 			g.FService().P("return wresp, nil")
 		} else {
 			// return stream wrapper
-			g.FService().P("return &wrap", svcName, rpc.Name, "Client{cli: resp}, nil")
+			g.FService().P("return &wrap", svcName, "_", rpc.Name, "Client{cli: resp}, nil")
 		}
 
 		g.FService().Out()
@@ -257,7 +257,7 @@ func (s *ServiceGen_gRPC) GenerateService(g *Generator, svc *fproto.ServiceEleme
 
 			g.FService().P()
 
-			wrapRPCClientName := "wrap" + svcName + rpc.Name + "Client"
+			wrapRPCClientName := "wrap" + svcName + "_" + rpc.Name + "Client"
 
 			//
 			// type wrapMyServiceMyRPCClient struct
@@ -514,9 +514,9 @@ func (s *ServiceGen_gRPC) GenerateService(g *Generator, svc *fproto.ServiceEleme
 
 		// call
 		if !rpc.StreamsRequest && rpc.StreamsResponse {
-			g.FService().P("err = w.srv.", rpc.Name, "(wreq, &wrap", svcName, rpc.Name, "Server{srv: stream})")
+			g.FService().P("err = w.srv.", rpc.Name, "(wreq, &wrap", svcName, "_", rpc.Name, "Server{srv: stream})")
 		} else if rpc.StreamsRequest || rpc.StreamsResponse {
-			g.FService().P("err = w.srv.", rpc.Name, "(&wrap", svcName, rpc.Name, "Server{srv: stream})")
+			g.FService().P("err = w.srv.", rpc.Name, "(&wrap", svcName, "_", rpc.Name, "Server{srv: stream})")
 		} else {
 			g.FService().P("resp, err := w.srv.", rpc.Name, "(ctx, wreq)")
 		}
@@ -593,9 +593,9 @@ func (s *ServiceGen_gRPC) GenerateService(g *Generator, svc *fproto.ServiceEleme
 			g.FService().P()
 
 			//
-			// type wrapMyServiceMyRPCServer struct
+			// type wrapMyService_MyRPCServer struct
 			//
-			wrapRPCServerName := "wrap" + svcName + rpc.Name + "Server"
+			wrapRPCServerName := "wrap" + svcName + "_" + rpc.Name + "Server"
 
 			g.FService().P("type ", wrapRPCServerName, " struct {")
 			g.FService().In()
