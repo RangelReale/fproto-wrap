@@ -252,6 +252,7 @@ func (s *ServiceGen_gRPC) GenerateService(g *Generator, svc *fproto.ServiceEleme
 				g.FService().P("CloseAndRecv() (", tinfo_resp.Converter().TypeName(g.FService(), TNT_TYPENAME, 0), ", error)")
 			}
 
+			g.FService().P("grpc.ClientStream")
 			g.FService().Out()
 			g.FService().P("}")
 
@@ -335,6 +336,56 @@ func (s *ServiceGen_gRPC) GenerateService(g *Generator, svc *fproto.ServiceEleme
 
 			g.FService().P("return wresp, nil")
 
+			g.FService().Out()
+			g.FService().P("}")
+			g.FService().P()
+
+			// Generate grpc.ClientStream methods
+			g.FService().P("// grpc.ClientStream")
+
+			metadata_alias := g.FService().DeclDep("google.golang.org/grpc/metadata", "metadata")
+
+			g.FService().P("func (w *", wrapRPCClientName, ") Header() (", metadata_alias, ".MD, error) {")
+			g.FService().In()
+			g.FService().P("return w.cli.Header()")
+			g.FService().Out()
+			g.FService().P("}")
+			g.FService().P()
+
+			g.FService().P("func (w *", wrapRPCClientName, ") Trailer() ", metadata_alias, ".MD {")
+			g.FService().In()
+			g.FService().P("return w.cli.Trailer()")
+			g.FService().Out()
+			g.FService().P("}")
+			g.FService().P()
+
+			g.FService().P("func (w *", wrapRPCClientName, ") CloseSend() error {")
+			g.FService().In()
+			g.FService().P("return w.cli.CloseSend()")
+			g.FService().Out()
+			g.FService().P("}")
+			g.FService().P()
+
+			// Generate grpc.Stream methods
+			g.FService().P("// grpc.Stream")
+
+			g.FService().P("func (w *", wrapRPCClientName, ") Context() ", ctx_alias, ".Context {")
+			g.FService().In()
+			g.FService().P("return w.cli.Context()")
+			g.FService().Out()
+			g.FService().P("}")
+			g.FService().P()
+
+			g.FService().P("func (w *", wrapRPCClientName, ") SendMsg(m interface{}) error {")
+			g.FService().In()
+			g.FService().P("return w.cli.SendMsg(m)")
+			g.FService().Out()
+			g.FService().P("}")
+			g.FService().P()
+
+			g.FService().P("func (w *", wrapRPCClientName, ") RecvMsg(m interface{}) error {")
+			g.FService().In()
+			g.FService().P("return w.cli.RecvMsg(m)")
 			g.FService().Out()
 			g.FService().P("}")
 			g.FService().P()
@@ -587,6 +638,7 @@ func (s *ServiceGen_gRPC) GenerateService(g *Generator, svc *fproto.ServiceEleme
 				g.FService().P("SendAndClose(", tinfo_resp.Converter().TypeName(g.FService(), TNT_TYPENAME, 0), ") error")
 			}
 
+			g.FService().P("grpc.ServerStream")
 			g.FService().Out()
 			g.FService().P("}")
 
@@ -693,6 +745,57 @@ func (s *ServiceGen_gRPC) GenerateService(g *Generator, svc *fproto.ServiceEleme
 			g.FService().Out()
 			g.FService().P("}")
 			g.FService().P()
+
+			// Generate grpc.ServerStream methods
+			g.FService().P("// grpc.ServerStream")
+
+			metadata_alias := g.FService().DeclDep("google.golang.org/grpc/metadata", "metadata")
+
+			g.FService().P("func (w *", wrapRPCServerName, ") SetHeader(md ", metadata_alias, ".MD) error {")
+			g.FService().In()
+			g.FService().P("return w.srv.SetHeader(md)")
+			g.FService().Out()
+			g.FService().P("}")
+			g.FService().P()
+
+			g.FService().P("func (w *", wrapRPCServerName, ") SendHeader(md ", metadata_alias, ".MD) error {")
+			g.FService().In()
+			g.FService().P("return w.srv.SendHeader(md)")
+			g.FService().Out()
+			g.FService().P("}")
+			g.FService().P()
+
+			g.FService().P("func (w *", wrapRPCServerName, ") SetTrailer(md ", metadata_alias, ".MD) {")
+			g.FService().In()
+			g.FService().P("w.srv.SetTrailer(md)")
+			g.FService().Out()
+			g.FService().P("}")
+			g.FService().P()
+
+			// Generate grpc.Stream methods
+			g.FService().P("// grpc.Stream")
+
+			g.FService().P("func (w *", wrapRPCServerName, ") Context() ", ctx_alias, ".Context {")
+			g.FService().In()
+			g.FService().P("return w.srv.Context()")
+			g.FService().Out()
+			g.FService().P("}")
+			g.FService().P()
+
+			g.FService().P("func (w *", wrapRPCServerName, ") SendMsg(m interface{}) error {")
+			g.FService().In()
+			g.FService().P("return w.srv.SendMsg(m)")
+			g.FService().Out()
+			g.FService().P("}")
+			g.FService().P()
+
+			g.FService().P("func (w *", wrapRPCServerName, ") RecvMsg(m interface{}) error {")
+			g.FService().In()
+			g.FService().P("return w.srv.RecvMsg(m)")
+			g.FService().Out()
+			g.FService().P("}")
+			g.FService().P()
+
 		}
 	}
 
