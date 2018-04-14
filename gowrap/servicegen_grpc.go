@@ -113,8 +113,19 @@ func (s *ServiceGen_gRPC) GenerateService(g *Generator, svc *fproto.ServiceEleme
 	g.FService().P("func New", svcName, "Client(cc *", grpc_alias, ".ClientConn) ", svcName, "Client {")
 	g.FService().In()
 
-	g.FService().P("w := &", wrapClientName, "{cli: ", func_alias, ".New", svcName, "Client(cc)}")
-	g.FService().P("return w")
+	g.FService().P("return NewWrap", svcName, "Client(", func_alias, ".New", svcName, "Client(cc))")
+
+	g.FService().Out()
+	g.FService().P("}")
+	g.FService().P()
+
+	//
+	// func NewWrapMyServiceClient(cli source.MyServiceClient) MyServiceClient
+	//
+	g.FService().P("func NewWrap", svcName, "Client(cli ", func_alias, ".", svcName, "Client) ", svcName, "Client {")
+	g.FService().In()
+
+	g.FService().P("return &", wrapClientName, "{cli: cli}")
 
 	g.FService().Out()
 	g.FService().P("}")
@@ -459,10 +470,10 @@ func (s *ServiceGen_gRPC) GenerateService(g *Generator, svc *fproto.ServiceEleme
 	g.FService().P()
 
 	//
-	// func newWrapMyServiceServer(srv MyServiceServer, opts ...fproto_gowrap_util.RegServerOption) *wrapMyServiceServer
+	// func NewWrapMyServiceServer(srv MyServiceServer, opts ...fproto_gowrap_util.RegServerOption) *wrapMyServiceServer
 	//
 
-	g.FService().P("func newWrap", svcName, "Server(srv ", svcName, "Server, opts ...", util_alias, ".RegServerOption) *wrap", svcName, "Server {")
+	g.FService().P("func NewWrap", svcName, "Server(srv ", svcName, "Server, opts ...", util_alias, ".RegServerOption) *wrap", svcName, "Server {")
 	g.FService().In()
 
 	g.FService().P("w := &", wrapServerName, "{srv: srv}")
@@ -806,8 +817,8 @@ func (s *ServiceGen_gRPC) GenerateService(g *Generator, svc *fproto.ServiceEleme
 	g.FService().P("func Register", svcName, "Server(s *", grpc_alias, ".Server, srv ", svcName, "Server, opts ...", util_alias, ".RegServerOption) {")
 	g.FService().In()
 
-	// myapp.RegisterMyServiceServer(s, newWrapMyServiceServer(srv))
-	g.FService().P(func_alias, ".Register", svcName, "Server(s, newWrap", svcName, "Server(srv, opts...))")
+	// myapp.RegisterMyServiceServer(s, NewWrapMyServiceServer(srv))
+	g.FService().P(func_alias, ".Register", svcName, "Server(s, NewWrap", svcName, "Server(srv, opts...))")
 
 	g.FService().Out()
 	g.FService().P("}")
