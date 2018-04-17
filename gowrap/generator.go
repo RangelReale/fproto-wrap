@@ -401,6 +401,15 @@ func (g *Generator) generateMessage(message *fproto.MessageElement) error {
 			if err != nil {
 				return err
 			}
+			tinfokey, err := g.GetTypeInfoFromParent(tp_msg, xfld.KeyType)
+			if err != nil {
+				return err
+			}
+
+			g.FImpExp().P("if len(s.", fldGoName, ") > 0 {")
+			g.FImpExp().In()
+
+			g.FImpExp().P("ret.", fldGoName, "= make(map[", tinfokey.Converter().TypeName(g.FMain(), TNT_TYPENAME, 0), "]", tinfo.Converter().TypeName(g.FMain(), TNT_TYPENAME, 0), ")")
 
 			g.FImpExp().P("for msidx, ms := range s.", fldGoName, " {")
 			g.FImpExp().In()
@@ -415,6 +424,9 @@ func (g *Generator) generateMessage(message *fproto.MessageElement) error {
 			}
 
 			g.FImpExp().P("ret.", fldGoName, "[msidx] = msi")
+
+			g.FImpExp().Out()
+			g.FImpExp().P("}")
 
 			g.FImpExp().Out()
 			g.FImpExp().P("}")
@@ -512,6 +524,16 @@ func (g *Generator) generateMessage(message *fproto.MessageElement) error {
 				return err
 			}
 
+			tinfokey, err := g.GetTypeInfoFromParent(tp_msg, xfld.KeyType)
+			if err != nil {
+				return err
+			}
+
+			g.FImpExp().P("if len(m.", fldGoName, ") > 0 {")
+			g.FImpExp().In()
+
+			g.FImpExp().P("ret.", fldGoName, "= make(map[", tinfokey.Source().TypeName(g.FImpExp(), TNT_TYPENAME, 0), "]", tinfo.Source().TypeName(g.FImpExp(), TNT_TYPENAME, 0), ")")
+
 			g.FImpExp().P("for msidx, ms := range m.", fldGoName, " {")
 			g.FImpExp().In()
 			g.FImpExp().P("var msi ", tinfo.Source().TypeName(g.FImpExp(), TNT_TYPENAME, 0))
@@ -525,6 +547,9 @@ func (g *Generator) generateMessage(message *fproto.MessageElement) error {
 			}
 
 			g.FImpExp().P("ret.", fldGoName, "[msidx] = msi")
+
+			g.FImpExp().Out()
+			g.FImpExp().P("}")
 
 			g.FImpExp().Out()
 			g.FImpExp().P("}")
