@@ -67,7 +67,7 @@ func (g *GeneratorFile) HaveData() bool {
 }
 
 // Declares a dependency using a DepFile.
-func (g *GeneratorFile) DeclFileDep(depfile *fdep.DepFile, defalias string, is_gowrap bool) string {
+func (g *GeneratorFile) GetDeclFileDep(depfile *fdep.DepFile, defalias string, is_gowrap bool) (retimp string, retdefalias string) {
 	if depfile == nil {
 		depfile = g.G().GetDepFile()
 	}
@@ -92,7 +92,13 @@ func (g *GeneratorFile) DeclFileDep(depfile *fdep.DepFile, defalias string, is_g
 	} else {
 		p = depfile.GoPackage()
 	}
-	return g.DeclDep(p, defalias)
+	return p, defalias
+}
+
+// Declares a dependency using a DepFile.
+func (g *GeneratorFile) DeclFileDep(depfile *fdep.DepFile, defalias string, is_gowrap bool) string {
+	dimp, ddefalias := g.GetDeclFileDep(depfile, defalias, is_gowrap)
+	return g.DeclDep(dimp, ddefalias)
 }
 
 // Declares a dependency and returns the alias to be used on this file.
