@@ -927,7 +927,7 @@ func (g *Generator) GoPackage(depfile *fdep.DepFile) string {
 // Returns the wrapped package name.
 func (g *Generator) GoWrapPackage(depfile *fdep.DepFile) string {
 	if g.PkgSource != nil {
-		if p, ok := g.PkgSource.GetPkg(depfile); ok {
+		if p, ok := g.PkgSource.GetPkg(g, depfile); ok {
 			return p
 		}
 	}
@@ -955,7 +955,7 @@ func (g *Generator) GoFilePackage(depfile *fdep.DepFile) string {
 // Returns the wrapped file package name.
 func (g *Generator) GoWrapFilePackage(depfile *fdep.DepFile) string {
 	if g.PkgSource != nil {
-		if p, ok := g.PkgSource.GetFilePkg(depfile); ok {
+		if p, ok := g.PkgSource.GetFilePkg(g, depfile); ok {
 			return p
 		}
 	}
